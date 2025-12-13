@@ -28,6 +28,7 @@ export default function SettingsPage() {
         adminLineGroupId: "",
         enableDailyReport: false,
         customHolidays: [],
+        allowNewRegistration: true,
         locationConfig: {
             enabled: false,
             latitude: 0,
@@ -84,6 +85,7 @@ export default function SettingsPage() {
                         adminLineGroupId: config.adminLineGroupId ?? "",
                         enableDailyReport: config.enableDailyReport ?? false,
                         customHolidays: config.customHolidays ?? [],
+                        allowNewRegistration: config.allowNewRegistration ?? true,
                         locationConfig: config.locationConfig ?? {
                             enabled: false,
                             latitude: 0,
@@ -225,6 +227,7 @@ export default function SettingsPage() {
             lateDeductionRate: 0,
             requirePhoto: true,
             customHolidays: [],
+            allowNewRegistration: true,
             locationConfig: {
                 enabled: false,
                 latitude: 0,
@@ -1120,10 +1123,10 @@ export default function SettingsPage() {
                                             <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                                 <span className="text-sm text-gray-700">{result.queryName}</span>
                                                 <span className={`px-2 py-1 rounded text-xs font-medium ${result.status === "ok"
-                                                        ? "bg-green-100 text-green-700"
-                                                        : result.status === "missing"
-                                                            ? "bg-red-100 text-red-700"
-                                                            : "bg-gray-100 text-gray-700"
+                                                    ? "bg-green-100 text-green-700"
+                                                    : result.status === "missing"
+                                                        ? "bg-red-100 text-red-700"
+                                                        : "bg-gray-100 text-gray-700"
                                                     }`}>
                                                     {result.status === "ok" ? "✓ พร้อม" : result.status === "missing" ? "✕ ต้องสร้าง" : "? ไม่ทราบ"}
                                                 </span>
