@@ -29,6 +29,7 @@ export default function SettingsPage() {
         enableDailyReport: false,
         customHolidays: [],
         allowNewRegistration: true,
+        workTimeEnabled: true, // Enable work time tracking by default
         locationConfig: {
             enabled: false,
             latitude: 0,
@@ -86,6 +87,7 @@ export default function SettingsPage() {
                         enableDailyReport: config.enableDailyReport ?? false,
                         customHolidays: config.customHolidays ?? [],
                         allowNewRegistration: config.allowNewRegistration ?? true,
+                        workTimeEnabled: config.workTimeEnabled ?? true,
                         locationConfig: config.locationConfig ?? {
                             enabled: false,
                             latitude: 0,
@@ -228,6 +230,7 @@ export default function SettingsPage() {
             requirePhoto: true,
             customHolidays: [],
             allowNewRegistration: true,
+            workTimeEnabled: true,
             locationConfig: {
                 enabled: false,
                 latitude: 0,
@@ -552,626 +555,648 @@ export default function SettingsPage() {
 
                 {/* Work Time Settings */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                            <Clock className="w-5 h-5 text-blue-600" />
+                    <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                                <Clock className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-gray-800">เวลาทำงาน</h2>
+                                <p className="text-sm text-gray-500">กำหนดเวลาเข้า-ออกงานมาตรฐาน (คำนวณสาย/โอที)</p>
+                            </div>
                         </div>
-                        <div>
-                            <h2 className="text-lg font-bold text-gray-800">เวลาทำงาน</h2>
-                            <p className="text-sm text-gray-500">กำหนดเวลาเข้า-ออกงานมาตรฐาน</p>
-                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setSettings({ ...settings, workTimeEnabled: !settings.workTimeEnabled })}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${settings.workTimeEnabled ? 'bg-blue-600' : 'bg-gray-200'
+                                }`}
+                        >
+                            <span
+                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.workTimeEnabled ? 'translate-x-6' : 'translate-x-1'
+                                    }`}
+                            />
+                        </button>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Check In Time */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                เวลาเข้างานมาตรฐาน
-                            </label>
-                            <div className="flex gap-3">
-                                <div className="flex-1">
-                                    <select
-                                        value={settings.checkInHour}
-                                        onChange={(e) => setSettings({ ...settings, checkInHour: parseInt(e.target.value) })}
-                                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        {Array.from({ length: 24 }, (_, i) => (
-                                            <option key={i} value={i}>
-                                                {i.toString().padStart(2, '0')} ชั่วโมง
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="flex-1">
-                                    <select
-                                        value={settings.checkInMinute}
-                                        onChange={(e) => setSettings({ ...settings, checkInMinute: parseInt(e.target.value) })}
-                                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        {[0, 15, 30, 45].map((minute) => (
-                                            <option key={minute} value={minute}>
-                                                {minute.toString().padStart(2, '0')} นาที
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-                            <p className="text-xs text-gray-500 mt-2">
-                                ปัจจุบัน: {settings.checkInHour.toString().padStart(2, '0')}:{settings.checkInMinute.toString().padStart(2, '0')}
+                    {!settings.workTimeEnabled && (
+                        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+                            <p className="text-sm text-yellow-800">
+                                ⚠️ <strong>ปิดการใช้งาน:</strong> ระบบจะไม่คำนวณ/แจ้งเตือนการมาสายและโอที
                             </p>
                         </div>
+                    )}
 
-                        {/* Check Out Time */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                เวลาออกงานมาตรฐาน
-                            </label>
-                            <div className="flex gap-3">
-                                <div className="flex-1">
-                                    <select
-                                        value={settings.checkOutHour}
-                                        onChange={(e) => setSettings({ ...settings, checkOutHour: parseInt(e.target.value) })}
-                                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        {Array.from({ length: 24 }, (_, i) => (
-                                            <option key={i} value={i}>
-                                                {i.toString().padStart(2, '0')} ชั่วโมง
-                                            </option>
-                                        ))}
-                                    </select>
+                    <div className={`transition-opacity ${settings.workTimeEnabled ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Check In Time */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    เวลาเข้างานมาตรฐาน
+                                </label>
+                                <div className="flex gap-3">
+                                    <div className="flex-1">
+                                        <select
+                                            value={settings.checkInHour}
+                                            onChange={(e) => setSettings({ ...settings, checkInHour: parseInt(e.target.value) })}
+                                            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            {Array.from({ length: 24 }, (_, i) => (
+                                                <option key={i} value={i}>
+                                                    {i.toString().padStart(2, '0')} ชั่วโมง
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="flex-1">
+                                        <select
+                                            value={settings.checkInMinute}
+                                            onChange={(e) => setSettings({ ...settings, checkInMinute: parseInt(e.target.value) })}
+                                            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            {[0, 15, 30, 45].map((minute) => (
+                                                <option key={minute} value={minute}>
+                                                    {minute.toString().padStart(2, '0')} นาที
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
                                 </div>
-                                <div className="flex-1">
-                                    <select
-                                        value={settings.checkOutMinute}
-                                        onChange={(e) => setSettings({ ...settings, checkOutMinute: parseInt(e.target.value) })}
-                                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    >
-                                        {[0, 15, 30, 45].map((minute) => (
-                                            <option key={minute} value={minute}>
-                                                {minute.toString().padStart(2, '0')} นาที
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
+                                <p className="text-xs text-gray-500 mt-2">
+                                    ปัจจุบัน: {settings.checkInHour.toString().padStart(2, '0')}:{settings.checkInMinute.toString().padStart(2, '0')}
+                                </p>
                             </div>
-                            <p className="text-xs text-gray-500 mt-2">
-                                ปัจจุบัน: {settings.checkOutHour.toString().padStart(2, '0')}:{settings.checkOutMinute.toString().padStart(2, '0')}
-                            </p>
+
+                            {/* Check Out Time */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    เวลาออกงานมาตรฐาน
+                                </label>
+                                <div className="flex gap-3">
+                                    <div className="flex-1">
+                                        <select
+                                            value={settings.checkOutHour}
+                                            onChange={(e) => setSettings({ ...settings, checkOutHour: parseInt(e.target.value) })}
+                                            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            {Array.from({ length: 24 }, (_, i) => (
+                                                <option key={i} value={i}>
+                                                    {i.toString().padStart(2, '0')} ชั่วโมง
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="flex-1">
+                                        <select
+                                            value={settings.checkOutMinute}
+                                            onChange={(e) => setSettings({ ...settings, checkOutMinute: parseInt(e.target.value) })}
+                                            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        >
+                                            {[0, 15, 30, 45].map((minute) => (
+                                                <option key={minute} value={minute}>
+                                                    {minute.toString().padStart(2, '0')} นาที
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                                <p className="text-xs text-gray-500 mt-2">
+                                    ปัจจุบัน: {settings.checkOutHour.toString().padStart(2, '0')}:{settings.checkOutMinute.toString().padStart(2, '0')}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
-
-                {/* Late & OT Settings */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
-                            <AlertCircle className="w-5 h-5 text-orange-600" />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-bold text-gray-800">นโยบายสาย & โอที</h2>
-                            <p className="text-sm text-gray-500">กำหนดเงื่อนไขการมาสายและโอเวอร์ไทม์</p>
-                        </div>
+            </div>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
+                        <AlertCircle className="w-5 h-5 text-orange-600" />
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Late Grace Period */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                ระยะเวลาที่ยอมให้สาย (นาที)
-                            </label>
-                            <input
-                                type="number"
-                                min="0"
-                                max="60"
-                                value={settings.lateGracePeriod}
-                                onChange={(e) => setSettings({ ...settings, lateGracePeriod: parseInt(e.target.value) || 0 })}
-                                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="0"
-                            />
-                            <p className="text-xs text-gray-500 mt-2">
-                                {settings.lateGracePeriod === 0
-                                    ? "ไม่มีระยะเวลาผ่อนผัน (เกินเวลา = สาย)"
-                                    : `ยอมให้สายได้ ${settings.lateGracePeriod} นาที`}
-                            </p>
-                        </div>
-
-                        {/* Minimum OT Minutes */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                ระยะเวลาขั้นต่ำสำหรับโอที (นาที)
-                            </label>
-                            <input
-                                type="number"
-                                min="0"
-                                max="240"
-                                step="15"
-                                value={settings.minOTMinutes}
-                                onChange={(e) => setSettings({ ...settings, minOTMinutes: parseInt(e.target.value) || 0 })}
-                                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="30"
-                            />
-                            <p className="text-xs text-gray-500 mt-2">
-                                ต้องทำงานเกินเวลาอย่างน้อย {settings.minOTMinutes} นาที จึงจะนับเป็นโอที
-                            </p>
-                        </div>
+                    <div>
+                        <h2 className="text-lg font-bold text-gray-800">นโยบายสาย & โอที</h2>
+                        <p className="text-sm text-gray-500">กำหนดเงื่อนไขการมาสายและโอเวอร์ไทม์</p>
                     </div>
                 </div>
 
-                {/* Payroll Configuration */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
-                            <DollarSign className="w-5 h-5 text-green-600" />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-bold text-gray-800">การคำนวณเงินเดือน</h2>
-                            <p className="text-sm text-gray-500">กำหนดอัตราการจ่ายและหักเงิน</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Late Grace Period */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            ระยะเวลาที่ยอมให้สาย (นาที)
+                        </label>
+                        <input
+                            type="number"
+                            min="0"
+                            max="60"
+                            value={settings.lateGracePeriod}
+                            onChange={(e) => setSettings({ ...settings, lateGracePeriod: parseInt(e.target.value) || 0 })}
+                            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="0"
+                        />
+                        <p className="text-xs text-gray-500 mt-2">
+                            {settings.lateGracePeriod === 0
+                                ? "ไม่มีระยะเวลาผ่อนผัน (เกินเวลา = สาย)"
+                                : `ยอมให้สายได้ ${settings.lateGracePeriod} นาที`}
+                        </p>
+                    </div>
+
+                    {/* Minimum OT Minutes */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            ระยะเวลาขั้นต่ำสำหรับโอที (นาที)
+                        </label>
+                        <input
+                            type="number"
+                            min="0"
+                            max="240"
+                            step="15"
+                            value={settings.minOTMinutes}
+                            onChange={(e) => setSettings({ ...settings, minOTMinutes: parseInt(e.target.value) || 0 })}
+                            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="30"
+                        />
+                        <p className="text-xs text-gray-500 mt-2">
+                            ต้องทำงานเกินเวลาอย่างน้อย {settings.minOTMinutes} นาที จึงจะนับเป็นโอที
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Payroll Configuration */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
+                        <DollarSign className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div>
+                        <h2 className="text-lg font-bold text-gray-800">การคำนวณเงินเดือน</h2>
+                        <p className="text-sm text-gray-500">กำหนดอัตราการจ่ายและหักเงิน</p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* OT Multiplier Normal */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            อัตราจ่าย OT ปกติ (เท่า)
+                        </label>
+                        <input
+                            type="number"
+                            min="1"
+                            max="3"
+                            step="0.1"
+                            value={settings.otMultiplier}
+                            onChange={(e) => setSettings({ ...settings, otMultiplier: parseFloat(e.target.value) || 1.5 })}
+                            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="1.5"
+                        />
+                        <p className="text-xs text-gray-500 mt-2">
+                            สำหรับวันทำงานปกติ (จันทร์-ศุกร์)
+                        </p>
+                    </div>
+
+                    {/* OT Multiplier Holiday */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            อัตราจ่าย OT วันหยุด (เท่า)
+                        </label>
+                        <input
+                            type="number"
+                            min="1"
+                            max="5"
+                            step="0.1"
+                            value={settings.otMultiplierHoliday}
+                            onChange={(e) => setSettings({ ...settings, otMultiplierHoliday: parseFloat(e.target.value) || 3.0 })}
+                            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="3.0"
+                        />
+                        <p className="text-xs text-gray-500 mt-2">
+                            สำหรับวันหยุดประจำสัปดาห์
+                        </p>
+                    </div>
+
+                    {/* Weekly Holidays */}
+                    <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            วันหยุดประจำสัปดาห์
+                        </label>
+                        <div className="flex flex-wrap gap-3">
+                            {["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"].map((day, index) => (
+                                <label key={index} className="flex items-center gap-2 cursor-pointer bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-100">
+                                    <input
+                                        type="checkbox"
+                                        checked={settings.weeklyHolidays?.includes(index) ?? false}
+                                        onChange={(e) => {
+                                            const current = settings.weeklyHolidays || [];
+                                            if (e.target.checked) {
+                                                setSettings({ ...settings, weeklyHolidays: [...current, index] });
+                                            } else {
+                                                setSettings({ ...settings, weeklyHolidays: current.filter(d => d !== index) });
+                                            }
+                                        }}
+                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    <span className="text-sm text-gray-700">{day}</span>
+                                </label>
+                            ))}
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* OT Multiplier Normal */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                อัตราจ่าย OT ปกติ (เท่า)
-                            </label>
-                            <input
-                                type="number"
-                                min="1"
-                                max="3"
-                                step="0.1"
-                                value={settings.otMultiplier}
-                                onChange={(e) => setSettings({ ...settings, otMultiplier: parseFloat(e.target.value) || 1.5 })}
-                                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="1.5"
-                            />
-                            <p className="text-xs text-gray-500 mt-2">
-                                สำหรับวันทำงานปกติ (จันทร์-ศุกร์)
-                            </p>
-                        </div>
+                    {/* Custom Holidays */}
+                    <div className="md:col-span-2 border-t border-gray-100 pt-6 mt-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-4">
+                            วันหยุดพิเศษ (กำหนดเอง)
+                        </label>
 
-                        {/* OT Multiplier Holiday */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                อัตราจ่าย OT วันหยุด (เท่า)
-                            </label>
-                            <input
-                                type="number"
-                                min="1"
-                                max="5"
-                                step="0.1"
-                                value={settings.otMultiplierHoliday}
-                                onChange={(e) => setSettings({ ...settings, otMultiplierHoliday: parseFloat(e.target.value) || 3.0 })}
-                                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="3.0"
-                            />
-                            <p className="text-xs text-gray-500 mt-2">
-                                สำหรับวันหยุดประจำสัปดาห์
-                            </p>
-                        </div>
-
-                        {/* Weekly Holidays */}
-                        <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                วันหยุดประจำสัปดาห์
-                            </label>
-                            <div className="flex flex-wrap gap-3">
-                                {["อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์"].map((day, index) => (
-                                    <label key={index} className="flex items-center gap-2 cursor-pointer bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 hover:bg-gray-100">
-                                        <input
-                                            type="checkbox"
-                                            checked={settings.weeklyHolidays?.includes(index) ?? false}
-                                            onChange={(e) => {
-                                                const current = settings.weeklyHolidays || [];
-                                                if (e.target.checked) {
-                                                    setSettings({ ...settings, weeklyHolidays: [...current, index] });
-                                                } else {
-                                                    setSettings({ ...settings, weeklyHolidays: current.filter(d => d !== index) });
-                                                }
-                                            }}
-                                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                        />
-                                        <span className="text-sm text-gray-700">{day}</span>
-                                    </label>
-                                ))}
+                        {/* Add New Holiday */}
+                        <div className="flex flex-wrap gap-3 mb-4 items-end bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <div>
+                                <label className="block text-xs text-gray-500 mb-1">วันที่</label>
+                                <input
+                                    type="date"
+                                    value={newHoliday.date}
+                                    onChange={(e) => setNewHoliday({ ...newHoliday, date: e.target.value })}
+                                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
                             </div>
+                            <div className="flex-1 min-w-[200px]">
+                                <label className="block text-xs text-gray-500 mb-1">ชื่อวันหยุด</label>
+                                <input
+                                    type="text"
+                                    value={newHoliday.name}
+                                    onChange={(e) => setNewHoliday({ ...newHoliday, name: e.target.value })}
+                                    placeholder="เช่น วันปีใหม่"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                            <div className="w-28">
+                                <label className="block text-xs text-gray-500 mb-1">ค่าแรง (เท่า)</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="5"
+                                    step="0.1"
+                                    value={newHoliday.workdayMultiplier}
+                                    onChange={(e) => setNewHoliday({ ...newHoliday, workdayMultiplier: parseFloat(e.target.value) || 2.0 })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                            <div className="w-24">
+                                <label className="block text-xs text-gray-500 mb-1">OT (เท่า)</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="5"
+                                    step="0.1"
+                                    value={newHoliday.otMultiplier}
+                                    onChange={(e) => setNewHoliday({ ...newHoliday, otMultiplier: parseFloat(e.target.value) || 1.5 })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                            <button
+                                onClick={handleAddHoliday}
+                                disabled={!newHoliday.name}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 h-[38px]"
+                            >
+                                <Plus className="w-4 h-4" />
+                                เพิ่ม
+                            </button>
                         </div>
 
-                        {/* Custom Holidays */}
-                        <div className="md:col-span-2 border-t border-gray-100 pt-6 mt-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-4">
-                                วันหยุดพิเศษ (กำหนดเอง)
+                        {/* Holiday List */}
+                        <div className="space-y-2">
+                            {settings.customHolidays && settings.customHolidays.length > 0 ? (
+                                settings.customHolidays.map((holiday, index) => (
+                                    <div key={index} className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex items-center gap-2 text-gray-600">
+                                                <Calendar className="w-4 h-4 text-blue-500" />
+                                                <span className="font-mono text-sm">
+                                                    {format(new Date(holiday.date), "d MMM yyyy", { locale: th })}
+                                                </span>
+                                            </div>
+                                            <span className="font-medium text-gray-800">{holiday.name}</span>
+                                            <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-md font-medium">
+                                                ค่าแรง x{holiday.workdayMultiplier}
+                                            </span>
+                                            <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-md font-medium">
+                                                OT x{holiday.otMultiplier}
+                                            </span>
+                                        </div>
+                                        <button
+                                            onClick={() => handleRemoveHoliday(index)}
+                                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="text-center py-6 text-gray-400 bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                                    ยังไม่มีวันหยุดพิเศษที่กำหนด
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Late Deduction */}
+                    <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            การหักเงินเมื่อมาสาย
+                        </label>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <label className={`cursor-pointer p-4 rounded-xl border-2 transition-all ${settings.lateDeductionType === "none"
+                                ? "border-blue-600 bg-blue-50"
+                                : "border-gray-200 hover:border-blue-200"
+                                }`}>
+                                <div className="flex items-center gap-3">
+                                    <input
+                                        type="radio"
+                                        name="lateDeduction"
+                                        checked={settings.lateDeductionType === "none"}
+                                        onChange={() => setSettings({ ...settings, lateDeductionType: "none" })}
+                                        className="w-4 h-4 text-blue-600"
+                                    />
+                                    <span className="font-medium text-gray-900">ไม่หักเงิน</span>
+                                </div>
                             </label>
 
-                            {/* Add New Holiday */}
-                            <div className="flex flex-wrap gap-3 mb-4 items-end bg-gray-50 p-4 rounded-xl border border-gray-200">
-                                <div>
-                                    <label className="block text-xs text-gray-500 mb-1">วันที่</label>
+                            <label className={`cursor-pointer p-4 rounded-xl border-2 transition-all ${settings.lateDeductionType === "pro-rated"
+                                ? "border-blue-600 bg-blue-50"
+                                : "border-gray-200 hover:border-blue-200"
+                                }`}>
+                                <div className="flex items-center gap-3">
                                     <input
-                                        type="date"
-                                        value={newHoliday.date}
-                                        onChange={(e) => setNewHoliday({ ...newHoliday, date: e.target.value })}
-                                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        type="radio"
+                                        name="lateDeduction"
+                                        checked={settings.lateDeductionType === "pro-rated"}
+                                        onChange={() => setSettings({ ...settings, lateDeductionType: "pro-rated" })}
+                                        className="w-4 h-4 text-blue-600"
                                     />
+                                    <span className="font-medium text-gray-900">หักตามจริง</span>
                                 </div>
-                                <div className="flex-1 min-w-[200px]">
-                                    <label className="block text-xs text-gray-500 mb-1">ชื่อวันหยุด</label>
+                                <p className="text-xs text-gray-500 mt-2 ml-7">
+                                    คำนวณจากฐานเงินเดือนและเวลาที่สาย
+                                </p>
+                            </label>
+
+                            <label className={`cursor-pointer p-4 rounded-xl border-2 transition-all ${settings.lateDeductionType === "fixed_per_minute"
+                                ? "border-blue-600 bg-blue-50"
+                                : "border-gray-200 hover:border-blue-200"
+                                }`}>
+                                <div className="flex items-center gap-3">
                                     <input
-                                        type="text"
-                                        value={newHoliday.name}
-                                        onChange={(e) => setNewHoliday({ ...newHoliday, name: e.target.value })}
-                                        placeholder="เช่น วันปีใหม่"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        type="radio"
+                                        name="lateDeduction"
+                                        checked={settings.lateDeductionType === "fixed_per_minute"}
+                                        onChange={() => setSettings({ ...settings, lateDeductionType: "fixed_per_minute" })}
+                                        className="w-4 h-4 text-blue-600"
                                     />
+                                    <span className="font-medium text-gray-900">หักต่อนาที</span>
                                 </div>
-                                <div className="w-28">
-                                    <label className="block text-xs text-gray-500 mb-1">ค่าแรง (เท่า)</label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        max="5"
-                                        step="0.1"
-                                        value={newHoliday.workdayMultiplier}
-                                        onChange={(e) => setNewHoliday({ ...newHoliday, workdayMultiplier: parseFloat(e.target.value) || 2.0 })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
-                                </div>
-                                <div className="w-24">
-                                    <label className="block text-xs text-gray-500 mb-1">OT (เท่า)</label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        max="5"
-                                        step="0.1"
-                                        value={newHoliday.otMultiplier}
-                                        onChange={(e) => setNewHoliday({ ...newHoliday, otMultiplier: parseFloat(e.target.value) || 1.5 })}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
-                                </div>
+                                {settings.lateDeductionType === "fixed_per_minute" && (
+                                    <div className="mt-3 ml-7">
+                                        <div className="flex items-center gap-2">
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                value={settings.lateDeductionRate}
+                                                onChange={(e) => setSettings({ ...settings, lateDeductionRate: parseFloat(e.target.value) || 0 })}
+                                                className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                                            />
+                                            <span className="text-sm text-gray-500">บาท/นาที</span>
+                                        </div>
+                                    </div>
+                                )}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Notifications Settings */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 bg-purple-50 rounded-xl">
+                        <AlertCircle className="w-6 h-6 text-purple-600" />
+                    </div>
+                    <h2 className="text-lg font-bold text-gray-800">การแจ้งเตือนผู้ดูแลระบบ</h2>
+                </div>
+
+                <div className="space-y-6">
+                    {/* Daily Report Toggle */}
+                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                        <div>
+                            <p className="font-medium text-gray-900">รายงานสรุปประจำวัน</p>
+                            <p className="text-sm text-gray-500">ส่งรายงานสรุปการเข้างาน (มา, สาย, ลา) ให้แอดมินทุกวัน</p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                                type="checkbox"
+                                className="sr-only peer"
+                                checked={settings.enableDailyReport}
+                                onChange={(e) => setSettings({ ...settings, enableDailyReport: e.target.checked })}
+                            />
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                        </label>
+                    </div>
+
+                    {/* Admin Line Group ID */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Line Group ID (สำหรับแจ้งเตือน)
+                        </label>
+                        <input
+                            type="text"
+                            value={settings.adminLineGroupId}
+                            onChange={(e) => setSettings({ ...settings, adminLineGroupId: e.target.value })}
+                            placeholder="Cxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                            className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all font-mono text-sm"
+                        />
+                        <p className="text-xs text-gray-500 mt-2">
+                            * ใส่ Line Group ID ที่ต้องการให้บอทส่งรายงาน (ต้องเชิญบอทเข้ากลุ่มก่อน)
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Firestore Index Checker */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="p-2 bg-indigo-50 rounded-xl">
+                        <Database className="w-6 h-6 text-indigo-600" />
+                    </div>
+                    <div>
+                        <h2 className="text-lg font-bold text-gray-800">Firestore Indexes</h2>
+                        <p className="text-sm text-gray-500">ตรวจสอบและสร้าง Composite Indexes ที่จำเป็น</p>
+                    </div>
+                </div>
+
+                <div className="space-y-4">
+                    <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-xl">
+                        <p className="text-sm text-indigo-700">
+                            💡 เมื่อย้ายไปใช้ Firebase Project ใหม่ ต้องสร้าง Composite Indexes ใหม่ทุกครั้ง
+                            กดปุ่มด้านล่างเพื่อตรวจสอบว่ามี Index ใดที่ยังไม่ได้สร้าง
+                        </p>
+                    </div>
+
+                    <Button
+                        onClick={async () => {
+                            setCheckingIndexes(true);
+                            try {
+                                const results = await checkAllIndexes();
+                                setIndexResults(results);
+                                setShowIndexModal(true);
+                            } catch (error) {
+                                console.error("Error checking indexes:", error);
+                                alert("เกิดข้อผิดพลาดในการตรวจสอบ Indexes");
+                            } finally {
+                                setCheckingIndexes(false);
+                            }
+                        }}
+                        disabled={checkingIndexes}
+                        className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white gap-2"
+                    >
+                        {checkingIndexes ? (
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                        ) : (
+                            <Database className="w-4 h-4" />
+                        )}
+                        {checkingIndexes ? "กำลังตรวจสอบ..." : "ตรวจสอบ Firestore Indexes"}
+                    </Button>
+                </div>
+            </div>
+
+            {/* Index Check Results Modal */}
+            {showIndexModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+                        <div className="p-6 border-b border-gray-100">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-xl font-bold text-gray-800">ผลการตรวจสอบ Firestore Indexes</h3>
                                 <button
-                                    onClick={handleAddHoliday}
-                                    disabled={!newHoliday.name}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 h-[38px]"
+                                    onClick={() => setShowIndexModal(false)}
+                                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                                 >
-                                    <Plus className="w-4 h-4" />
-                                    เพิ่ม
+                                    ✕
                                 </button>
                             </div>
-
-                            {/* Holiday List */}
-                            <div className="space-y-2">
-                                {settings.customHolidays && settings.customHolidays.length > 0 ? (
-                                    settings.customHolidays.map((holiday, index) => (
-                                        <div key={index} className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
-                                            <div className="flex items-center gap-4">
-                                                <div className="flex items-center gap-2 text-gray-600">
-                                                    <Calendar className="w-4 h-4 text-blue-500" />
-                                                    <span className="font-mono text-sm">
-                                                        {format(new Date(holiday.date), "d MMM yyyy", { locale: th })}
-                                                    </span>
-                                                </div>
-                                                <span className="font-medium text-gray-800">{holiday.name}</span>
-                                                <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-md font-medium">
-                                                    ค่าแรง x{holiday.workdayMultiplier}
-                                                </span>
-                                                <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-md font-medium">
-                                                    OT x{holiday.otMultiplier}
-                                                </span>
-                                            </div>
-                                            <button
-                                                onClick={() => handleRemoveHoliday(index)}
-                                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="text-center py-6 text-gray-400 bg-gray-50 rounded-lg border border-dashed border-gray-200">
-                                        ยังไม่มีวันหยุดพิเศษที่กำหนด
-                                    </div>
-                                )}
-                            </div>
                         </div>
 
-                        {/* Late Deduction */}
-                        <div className="md:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                การหักเงินเมื่อมาสาย
-                            </label>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <label className={`cursor-pointer p-4 rounded-xl border-2 transition-all ${settings.lateDeductionType === "none"
-                                    ? "border-blue-600 bg-blue-50"
-                                    : "border-gray-200 hover:border-blue-200"
-                                    }`}>
-                                    <div className="flex items-center gap-3">
-                                        <input
-                                            type="radio"
-                                            name="lateDeduction"
-                                            checked={settings.lateDeductionType === "none"}
-                                            onChange={() => setSettings({ ...settings, lateDeductionType: "none" })}
-                                            className="w-4 h-4 text-blue-600"
-                                        />
-                                        <span className="font-medium text-gray-900">ไม่หักเงิน</span>
-                                    </div>
-                                </label>
-
-                                <label className={`cursor-pointer p-4 rounded-xl border-2 transition-all ${settings.lateDeductionType === "pro-rated"
-                                    ? "border-blue-600 bg-blue-50"
-                                    : "border-gray-200 hover:border-blue-200"
-                                    }`}>
-                                    <div className="flex items-center gap-3">
-                                        <input
-                                            type="radio"
-                                            name="lateDeduction"
-                                            checked={settings.lateDeductionType === "pro-rated"}
-                                            onChange={() => setSettings({ ...settings, lateDeductionType: "pro-rated" })}
-                                            className="w-4 h-4 text-blue-600"
-                                        />
-                                        <span className="font-medium text-gray-900">หักตามจริง</span>
-                                    </div>
-                                    <p className="text-xs text-gray-500 mt-2 ml-7">
-                                        คำนวณจากฐานเงินเดือนและเวลาที่สาย
-                                    </p>
-                                </label>
-
-                                <label className={`cursor-pointer p-4 rounded-xl border-2 transition-all ${settings.lateDeductionType === "fixed_per_minute"
-                                    ? "border-blue-600 bg-blue-50"
-                                    : "border-gray-200 hover:border-blue-200"
-                                    }`}>
-                                    <div className="flex items-center gap-3">
-                                        <input
-                                            type="radio"
-                                            name="lateDeduction"
-                                            checked={settings.lateDeductionType === "fixed_per_minute"}
-                                            onChange={() => setSettings({ ...settings, lateDeductionType: "fixed_per_minute" })}
-                                            className="w-4 h-4 text-blue-600"
-                                        />
-                                        <span className="font-medium text-gray-900">หักต่อนาที</span>
-                                    </div>
-                                    {settings.lateDeductionType === "fixed_per_minute" && (
-                                        <div className="mt-3 ml-7">
-                                            <div className="flex items-center gap-2">
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    value={settings.lateDeductionRate}
-                                                    onChange={(e) => setSettings({ ...settings, lateDeductionRate: parseFloat(e.target.value) || 0 })}
-                                                    className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
-                                                />
-                                                <span className="text-sm text-gray-500">บาท/นาที</span>
-                                            </div>
-                                        </div>
-                                    )}
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Notifications Settings */}
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="p-2 bg-purple-50 rounded-xl">
-                            <AlertCircle className="w-6 h-6 text-purple-600" />
-                        </div>
-                        <h2 className="text-lg font-bold text-gray-800">การแจ้งเตือนผู้ดูแลระบบ</h2>
-                    </div>
-
-                    <div className="space-y-6">
-                        {/* Daily Report Toggle */}
-                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                            <div>
-                                <p className="font-medium text-gray-900">รายงานสรุปประจำวัน</p>
-                                <p className="text-sm text-gray-500">ส่งรายงานสรุปการเข้างาน (มา, สาย, ลา) ให้แอดมินทุกวัน</p>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    className="sr-only peer"
-                                    checked={settings.enableDailyReport}
-                                    onChange={(e) => setSettings({ ...settings, enableDailyReport: e.target.checked })}
-                                />
-                                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                            </label>
-                        </div>
-
-                        {/* Admin Line Group ID */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Line Group ID (สำหรับแจ้งเตือน)
-                            </label>
-                            <input
-                                type="text"
-                                value={settings.adminLineGroupId}
-                                onChange={(e) => setSettings({ ...settings, adminLineGroupId: e.target.value })}
-                                placeholder="Cxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                                className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all font-mono text-sm"
-                            />
-                            <p className="text-xs text-gray-500 mt-2">
-                                * ใส่ Line Group ID ที่ต้องการให้บอทส่งรายงาน (ต้องเชิญบอทเข้ากลุ่มก่อน)
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Firestore Index Checker */}
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-6">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="p-2 bg-indigo-50 rounded-xl">
-                            <Database className="w-6 h-6 text-indigo-600" />
-                        </div>
-                        <div>
-                            <h2 className="text-lg font-bold text-gray-800">Firestore Indexes</h2>
-                            <p className="text-sm text-gray-500">ตรวจสอบและสร้าง Composite Indexes ที่จำเป็น</p>
-                        </div>
-                    </div>
-
-                    <div className="space-y-4">
-                        <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-xl">
-                            <p className="text-sm text-indigo-700">
-                                💡 เมื่อย้ายไปใช้ Firebase Project ใหม่ ต้องสร้าง Composite Indexes ใหม่ทุกครั้ง
-                                กดปุ่มด้านล่างเพื่อตรวจสอบว่ามี Index ใดที่ยังไม่ได้สร้าง
-                            </p>
-                        </div>
-
-                        <Button
-                            onClick={async () => {
-                                setCheckingIndexes(true);
-                                try {
-                                    const results = await checkAllIndexes();
-                                    setIndexResults(results);
-                                    setShowIndexModal(true);
-                                } catch (error) {
-                                    console.error("Error checking indexes:", error);
-                                    alert("เกิดข้อผิดพลาดในการตรวจสอบ Indexes");
-                                } finally {
-                                    setCheckingIndexes(false);
-                                }
-                            }}
-                            disabled={checkingIndexes}
-                            className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white gap-2"
-                        >
-                            {checkingIndexes ? (
-                                <RefreshCw className="w-4 h-4 animate-spin" />
+                        <div className="p-6 overflow-y-auto max-h-[60vh]">
+                            {indexResults.filter(r => r.status === "missing").length === 0 ? (
+                                <div className="text-center py-8">
+                                    <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                                    <h4 className="text-lg font-bold text-gray-800">Indexes พร้อมใช้งานแล้ว!</h4>
+                                    <p className="text-gray-500 mt-2">ไม่พบ Index ที่ต้องสร้างเพิ่ม</p>
+                                </div>
                             ) : (
-                                <Database className="w-4 h-4" />
-                            )}
-                            {checkingIndexes ? "กำลังตรวจสอบ..." : "ตรวจสอบ Firestore Indexes"}
-                        </Button>
-                    </div>
-                </div>
-
-                {/* Index Check Results Modal */}
-                {showIndexModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-                        <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
-                            <div className="p-6 border-b border-gray-100">
-                                <div className="flex items-center justify-between">
-                                    <h3 className="text-xl font-bold text-gray-800">ผลการตรวจสอบ Firestore Indexes</h3>
-                                    <button
-                                        onClick={() => setShowIndexModal(false)}
-                                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                                    >
-                                        ✕
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className="p-6 overflow-y-auto max-h-[60vh]">
-                                {indexResults.filter(r => r.status === "missing").length === 0 ? (
-                                    <div className="text-center py-8">
-                                        <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                                        <h4 className="text-lg font-bold text-gray-800">Indexes พร้อมใช้งานแล้ว!</h4>
-                                        <p className="text-gray-500 mt-2">ไม่พบ Index ที่ต้องสร้างเพิ่ม</p>
+                                <div className="space-y-4">
+                                    <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+                                        <p className="text-sm text-yellow-800 font-medium">
+                                            ⚠️ พบ {indexResults.filter(r => r.status === "missing").length} Indexes ที่ต้องสร้าง
+                                        </p>
+                                        <p className="text-xs text-yellow-700 mt-1">
+                                            กดลิงก์แต่ละรายการเพื่อเปิด Firebase Console และสร้าง Index
+                                        </p>
                                     </div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
-                                            <p className="text-sm text-yellow-800 font-medium">
-                                                ⚠️ พบ {indexResults.filter(r => r.status === "missing").length} Indexes ที่ต้องสร้าง
-                                            </p>
-                                            <p className="text-xs text-yellow-700 mt-1">
-                                                กดลิงก์แต่ละรายการเพื่อเปิด Firebase Console และสร้าง Index
-                                            </p>
-                                        </div>
 
-                                        {indexResults.filter(r => r.status === "missing").map((result, index) => (
-                                            <div key={index} className="p-4 bg-red-50 border border-red-200 rounded-xl">
-                                                <div className="flex items-start justify-between gap-4">
-                                                    <div>
-                                                        <p className="font-medium text-gray-800">{result.queryName}</p>
-                                                        <p className="text-sm text-gray-500">Collection: {result.collection}</p>
-                                                    </div>
-                                                    {result.indexUrl ? (
-                                                        <a
-                                                            href={result.indexUrl}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm whitespace-nowrap"
-                                                        >
-                                                            <ExternalLink className="w-4 h-4" />
-                                                            สร้าง Index
-                                                        </a>
-                                                    ) : (
-                                                        <span className="px-3 py-1 bg-gray-200 text-gray-600 rounded-lg text-sm">
-                                                            ไม่พบ URL
-                                                        </span>
-                                                    )}
+                                    {indexResults.filter(r => r.status === "missing").map((result, index) => (
+                                        <div key={index} className="p-4 bg-red-50 border border-red-200 rounded-xl">
+                                            <div className="flex items-start justify-between gap-4">
+                                                <div>
+                                                    <p className="font-medium text-gray-800">{result.queryName}</p>
+                                                    <p className="text-sm text-gray-500">Collection: {result.collection}</p>
                                                 </div>
+                                                {result.indexUrl ? (
+                                                    <a
+                                                        href={result.indexUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm whitespace-nowrap"
+                                                    >
+                                                        <ExternalLink className="w-4 h-4" />
+                                                        สร้าง Index
+                                                    </a>
+                                                ) : (
+                                                    <span className="px-3 py-1 bg-gray-200 text-gray-600 rounded-lg text-sm">
+                                                        ไม่พบ URL
+                                                    </span>
+                                                )}
                                             </div>
-                                        ))}
-
-                                        <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
-                                            <p className="text-sm text-gray-700 font-medium">📋 วิธีใช้งาน:</p>
-                                            <ol className="text-sm text-gray-600 mt-2 space-y-1 list-decimal list-inside">
-                                                <li>กดปุ่ม "สร้าง Index" ของแต่ละรายการ</li>
-                                                <li>จะเปิดหน้า Firebase Console</li>
-                                                <li>กดปุ่ม "Create Index" ใน Firebase Console</li>
-                                                <li>รอ 1-2 นาทีจนสร้างเสร็จ</li>
-                                                <li>ทำซ้ำจนครบทุกรายการ</li>
-                                            </ol>
                                         </div>
-                                    </div>
-                                )}
+                                    ))}
 
-                                {/* Show all results */}
-                                <div className="mt-6">
-                                    <h4 className="font-medium text-gray-700 mb-3">รายการทั้งหมด:</h4>
-                                    <div className="space-y-2">
-                                        {indexResults.map((result, index) => (
-                                            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                                <span className="text-sm text-gray-700">{result.queryName}</span>
-                                                <span className={`px-2 py-1 rounded text-xs font-medium ${result.status === "ok"
-                                                    ? "bg-green-100 text-green-700"
-                                                    : result.status === "missing"
-                                                        ? "bg-red-100 text-red-700"
-                                                        : "bg-gray-100 text-gray-700"
-                                                    }`}>
-                                                    {result.status === "ok" ? "✓ พร้อม" : result.status === "missing" ? "✕ ต้องสร้าง" : "? ไม่ทราบ"}
-                                                </span>
-                                            </div>
-                                        ))}
+                                    <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                                        <p className="text-sm text-gray-700 font-medium">📋 วิธีใช้งาน:</p>
+                                        <ol className="text-sm text-gray-600 mt-2 space-y-1 list-decimal list-inside">
+                                            <li>กดปุ่ม "สร้าง Index" ของแต่ละรายการ</li>
+                                            <li>จะเปิดหน้า Firebase Console</li>
+                                            <li>กดปุ่ม "Create Index" ใน Firebase Console</li>
+                                            <li>รอ 1-2 นาทีจนสร้างเสร็จ</li>
+                                            <li>ทำซ้ำจนครบทุกรายการ</li>
+                                        </ol>
                                     </div>
                                 </div>
-                            </div>
+                            )}
 
-                            <div className="p-6 border-t border-gray-100 bg-gray-50">
-                                <Button
-                                    onClick={() => setShowIndexModal(false)}
-                                    className="w-full"
-                                    variant="outline"
-                                >
-                                    ปิด
-                                </Button>
+                            {/* Show all results */}
+                            <div className="mt-6">
+                                <h4 className="font-medium text-gray-700 mb-3">รายการทั้งหมด:</h4>
+                                <div className="space-y-2">
+                                    {indexResults.map((result, index) => (
+                                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                            <span className="text-sm text-gray-700">{result.queryName}</span>
+                                            <span className={`px-2 py-1 rounded text-xs font-medium ${result.status === "ok"
+                                                ? "bg-green-100 text-green-700"
+                                                : result.status === "missing"
+                                                    ? "bg-red-100 text-red-700"
+                                                    : "bg-gray-100 text-gray-700"
+                                                }`}>
+                                                {result.status === "ok" ? "✓ พร้อม" : result.status === "missing" ? "✕ ต้องสร้าง" : "? ไม่ทราบ"}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                )}
 
-                {/* Action Buttons */}
-                <div className="flex justify-end gap-4">
-                    <Button
-                        variant="outline"
-                        onClick={handleReset}
-                        disabled={loading}
-                        className="px-6"
-                    >
-                        คืนค่าเริ่มต้น
-                    </Button>
-                    <Button
-                        onClick={handleSave}
-                        disabled={loading}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-8 gap-2"
-                    >
-                        {loading ? (
-                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        ) : (
-                            <Save className="w-4 h-4" />
-                        )}
-                        บันทึกการตั้งค่า
-                    </Button>
+                        <div className="p-6 border-t border-gray-100 bg-gray-50">
+                            <Button
+                                onClick={() => setShowIndexModal(false)}
+                                className="w-full"
+                                variant="outline"
+                            >
+                                ปิด
+                            </Button>
+                        </div>
+                    </div>
                 </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-4">
+                <Button
+                    variant="outline"
+                    onClick={handleReset}
+                    disabled={loading}
+                    className="px-6"
+                >
+                    คืนค่าเริ่มต้น
+                </Button>
+                <Button
+                    onClick={handleSave}
+                    disabled={loading}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-8 gap-2"
+                >
+                    {loading ? (
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                        <Save className="w-4 h-4" />
+                    )}
+                    บันทึกการตั้งค่า
+                </Button>
             </div>
         </div>
     );

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { employeeService, attendanceService, leaveService, otService, type Employee, type Attendance, type LeaveRequest, type OTRequest } from "@/lib/firestore";
+import { employeeService, attendanceService, leaveService, otService, systemConfigService, type Employee, type Attendance, type LeaveRequest, type OTRequest } from "@/lib/firestore";
 import { AttendanceTable } from "@/components/dashboard/AttendanceTable";
 import { LeaveTable } from "@/components/leave/LeaveTable";
 import { OTTable } from "@/components/ot/OTTable";
@@ -25,9 +25,24 @@ export default function SearchPage() {
     const [loadingData, setLoadingData] = useState(false);
     const [copiedId, setCopiedId] = useState<string | null>(null);
     const [showDetails, setShowDetails] = useState(false);
+    const [locationEnabled, setLocationEnabled] = useState(false);
+    const [workTimeEnabled, setWorkTimeEnabled] = useState(true);
 
     useEffect(() => {
         loadEmployees();
+        // Load location and work time config
+        const loadConfig = async () => {
+            try {
+                const config = await systemConfigService.get();
+                if (config?.locationConfig?.enabled) {
+                    setLocationEnabled(true);
+                }
+                setWorkTimeEnabled(config?.workTimeEnabled ?? true);
+            } catch (error) {
+                console.error("Error loading config:", error);
+            }
+        };
+        loadConfig();
     }, []);
 
     useEffect(() => {
@@ -643,7 +658,7 @@ export default function SearchPage() {
                                 <p className="text-gray-600 mt-4">กำลังโหลดข้อมูล...</p>
                             </div>
                         ) : (
-                            <AttendanceTable attendances={attendances} />
+                            <AttendanceTable attendances={attendances} locationEnabled={locationEnabled} workTimeEnabled={workTimeEnabled} />
                         )}
                     </div>
 

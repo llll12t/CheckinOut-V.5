@@ -501,6 +501,8 @@ export interface SystemConfig {
     checkOutMinute: number;
     lateGracePeriod: number;
     minOTMinutes: number;
+    // Work Time Enable/Disable
+    workTimeEnabled?: boolean; // Enable work time tracking (late/OT)
     // Payroll Config
     otMultiplier: number; // Normal OT (e.g. 1.5)
     otMultiplierHoliday: number; // Holiday/Weekend OT (e.g. 3.0)

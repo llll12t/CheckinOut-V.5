@@ -11,9 +11,11 @@ interface AttendanceTableProps {
     onEdit?: (attendance: Attendance) => void;
     onDelete?: (id: string) => void;
     isSuperAdmin?: boolean;
+    locationEnabled?: boolean;
+    workTimeEnabled?: boolean;
 }
 
-export function AttendanceTable({ attendances, onEdit, onDelete, isSuperAdmin = false }: AttendanceTableProps) {
+export function AttendanceTable({ attendances, onEdit, onDelete, isSuperAdmin = false, locationEnabled = false, workTimeEnabled = true }: AttendanceTableProps) {
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
     const openMap = (lat: number, lng: number) => {
@@ -118,7 +120,7 @@ export function AttendanceTable({ attendances, onEdit, onDelete, isSuperAdmin = 
                                                         <MapPin className="w-3.5 h-3.5" />
                                                         แผนที่
                                                     </button>
-                                                    {attendance.distance !== undefined && (
+                                                    {locationEnabled && attendance.distance !== undefined && (
                                                         <span className="text-xs text-gray-500 ml-1">
                                                             ห่าง {attendance.distance < 1000 ? `${Math.round(attendance.distance)} ม.` : `${(attendance.distance / 1000).toFixed(2)} กม.`}
                                                         </span>
@@ -132,7 +134,8 @@ export function AttendanceTable({ attendances, onEdit, onDelete, isSuperAdmin = 
                                             {(() => {
                                                 const notes = [];
 
-                                                if ((attendance.status === "เข้างาน" || attendance.status === "สาย") && attendance.checkIn) {
+                                                // Only show late if workTimeEnabled
+                                                if (workTimeEnabled && (attendance.status === "เข้างาน" || attendance.status === "สาย") && attendance.checkIn) {
                                                     if (isLate(attendance.checkIn)) {
                                                         const lateMinutes = getLateMinutes(attendance.checkIn);
                                                         notes.push(
@@ -143,7 +146,8 @@ export function AttendanceTable({ attendances, onEdit, onDelete, isSuperAdmin = 
                                                     }
                                                 }
 
-                                                if (attendance.status === "ออกงาน" && attendance.checkOut) {
+                                                // Only show OT if workTimeEnabled
+                                                if (workTimeEnabled && attendance.status === "ออกงาน" && attendance.checkOut) {
                                                     if (isEligibleForOT(attendance.checkOut)) {
                                                         const otMinutes = getOTMinutes(attendance.checkOut);
                                                         notes.push(

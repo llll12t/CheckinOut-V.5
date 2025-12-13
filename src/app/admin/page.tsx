@@ -7,7 +7,7 @@ import { AttendanceTable } from "@/components/dashboard/AttendanceTable";
 import { AttendanceFormModal } from "@/components/dashboard/AttendanceFormModal";
 import { Button } from "@/components/ui/button";
 import { Plus, Calendar as CalendarIcon } from "lucide-react";
-import { attendanceService, type Attendance, adminService } from "@/lib/firestore";
+import { attendanceService, type Attendance, adminService, systemConfigService } from "@/lib/firestore";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import { auth } from "@/lib/firebase";
@@ -19,6 +19,8 @@ export default function DashboardPage() {
     const [loading, setLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+    const [locationEnabled, setLocationEnabled] = useState(false);
+    const [workTimeEnabled, setWorkTimeEnabled] = useState(true);
 
     const loadAttendances = async (date: Date) => {
         setLoading(true);
@@ -46,6 +48,20 @@ export default function DashboardPage() {
             }
         };
         checkAdminRole();
+
+        // Load location and work time config
+        const loadConfig = async () => {
+            try {
+                const config = await systemConfigService.get();
+                if (config?.locationConfig?.enabled) {
+                    setLocationEnabled(true);
+                }
+                setWorkTimeEnabled(config?.workTimeEnabled ?? true);
+            } catch (error) {
+                console.error("Error loading config:", error);
+            }
+        };
+        loadConfig();
     }, [selectedDate]);
 
     const handleAddAttendance = () => {
@@ -159,6 +175,8 @@ export default function DashboardPage() {
                     onEdit={handleEditAttendance}
                     onDelete={handleDeleteAttendance}
                     isSuperAdmin={isSuperAdmin}
+                    locationEnabled={locationEnabled}
+                    workTimeEnabled={workTimeEnabled}
                 />
             )}
 

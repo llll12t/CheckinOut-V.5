@@ -70,6 +70,7 @@ export default function CheckInPage() {
 
     // Settings
     const [requirePhoto, setRequirePhoto] = useState(true);
+    const [workTimeEnabled, setWorkTimeEnabled] = useState(true);
     const [locationConfig, setLocationConfig] = useState<{
         enabled: boolean;
         latitude: number;
@@ -107,6 +108,7 @@ export default function CheckInPage() {
                 const config = await systemConfigService.get();
                 if (config) {
                     setRequirePhoto(config.requirePhoto ?? true);
+                    setWorkTimeEnabled(config.workTimeEnabled ?? true);
                     if (config.locationConfig) {
                         setLocationConfig(config.locationConfig);
                     }
@@ -278,21 +280,23 @@ export default function CheckInPage() {
         const liff = (window as any).liff;
         if (liff && liff.isInClient()) {
             try {
-                // Calculate Late or OT status
+                // Calculate Late or OT status (only if workTimeEnabled)
                 let statusText = "";
                 let statusColor = "#666666";
 
-                if (type === "เข้างาน" && isLate(time)) {
-                    const lateMinutes = getLateMinutes(time);
-                    statusText = `สาย ${formatMinutesToHours(lateMinutes)}`;
-                    statusColor = "#ef4444"; // Red
-                } else if (type === "ออกงาน" && isEligibleForOT(time)) {
-                    const otMinutes = getOTMinutes(time);
-                    statusText = `ล่วงเวลา ${formatMinutesToHours(otMinutes)}`;
-                    statusColor = "#a855f7"; // Purple
-                } else if (type === "เข้างาน") {
-                    statusText = "ปกติ";
-                    statusColor = "#22c55e"; // Green
+                if (workTimeEnabled) {
+                    if (type === "เข้างาน" && isLate(time)) {
+                        const lateMinutes = getLateMinutes(time);
+                        statusText = `สาย ${formatMinutesToHours(lateMinutes)}`;
+                        statusColor = "#ef4444"; // Red
+                    } else if (type === "ออกงาน" && isEligibleForOT(time)) {
+                        const otMinutes = getOTMinutes(time);
+                        statusText = `ล่วงเวลา ${formatMinutesToHours(otMinutes)}`;
+                        statusColor = "#a855f7"; // Purple
+                    } else if (type === "เข้างาน") {
+                        statusText = "ปกติ";
+                        statusColor = "#22c55e"; // Green
+                    }
                 }
 
                 const contents: any[] = [
