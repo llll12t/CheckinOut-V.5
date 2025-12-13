@@ -49,13 +49,7 @@ export default function AdminLoginPage() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-[#F5F2ED] via-[#EBDACA] to-[#F5F2ED] flex items-center justify-center p-4">
             <div className="w-full max-w-md">
-                {/* Logo/Header */}
-                <div className="text-center mb-8">
-                    <div className="w-20 h-20 bg-[#000000] rounded-3xl mx-auto mb-4 flex items-center justify-center shadow-lg">
-                        <Lock className="w-10 h-10 text-white" />
-                    </div>
-                    <p className="text-gray-600">เข้าสู่ระบบจัดการ CHECKINOUT</p>
-                </div>
+                <h3 className="text-3xl font-bold text-center mb-6"> CHECK IN-OUT V.5</h3>
 
                 {/* Login Form */}
                 <div className="bg-white rounded-3xl shadow-2xl p-8 border border-gray-100">
@@ -137,28 +131,12 @@ export default function AdminLoginPage() {
                         </Button>
                     </form>
 
-                    {/* Divider */}
-                    <div className="relative my-6">
-                        <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-gray-200"></div>
-                        </div>
-                        <div className="relative flex justify-center text-sm">
-                            <span className="px-4 bg-white text-gray-500">หรือ</span>
-                        </div>
-                    </div>
 
-                    {/* Additional Info */}
-                    <p className="text-center text-sm text-gray-600">
-                        ต้องการความช่วยเหลือ?{" "}
-                        <a href="#" className="text-[#000000] font-medium hover:underline">
-                            ติดต่อผู้ดูแลระบบ
-                        </a>
-                    </p>
                 </div>
 
                 {/* Footer */}
                 <p className="text-center text-sm text-gray-600 mt-6">
-                    © 2025 CHECKINOUT. All rights reserved.
+                    © 3RN Studio
                 </p>
             </div>
         </div>

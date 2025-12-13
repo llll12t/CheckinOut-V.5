@@ -136,7 +136,7 @@ export default function DashboardPage() {
                         </div>
                         <Button
                             onClick={handleAddAttendance}
-                            className="w-full sm:w-auto bg-[#5C6BC0] hover:bg-[#5C6BC0]/90 text-white rounded-xl px-6 gap-2"
+                            className="w-full sm:w-auto bg-primary-dark text-white rounded-xl px-6 gap-2"
                         >
                             <Plus className="w-4 h-4" />
                             บันทึกการลงเวลา

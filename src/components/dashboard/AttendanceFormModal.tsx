@@ -246,7 +246,7 @@ export function AttendanceFormModal({ isOpen, onClose, attendance, onSuccess }: 
                         </Button>
                         <Button
                             type="submit"
-                            className="flex-1 h-12 bg-[#553734] hover:bg-[#553734]/90 text-white rounded-xl"
+                            className="flex-1 h-12 bg-primary-dark hover:bg-primary-dark/90 text-white rounded-xl"
                             disabled={loading}
                         >
                             {loading ? "กำลังบันทึก..." : attendance ? "บันทึกการแก้ไข" : "บันทึกการลงเวลา"}

@@ -4,7 +4,7 @@
   --primary-light: #ececec;
   --primary: #252525;
   --primary-dark: #000000;
-  --secondary: #F5F2ED;
+  --secondary: #313131;
   --accent: #FFFFFF;
   --text: #000000;
   --subtext: #a3a3a3;
@@ -203,6 +203,10 @@ body {
   font-weight: bold;
   position: relative;
   overflow: hidden;
+}
+
+.glass-card {
+  background-color: #FFFFFF;
 }
 
 .glass-card::before {

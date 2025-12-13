@@ -57,7 +57,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
             )}
 
             <aside className={cn(
-                "fixed inset-y-0 left-0 z-50 w-64 bg-[#F5F2ED] flex flex-col border-r border-gray-200 transition-transform duration-300 ease-in-out",
+                "fixed inset-y-0 left-0 z-50 w-64 bg-primary flex flex-col border-r border-gray-200 transition-transform duration-300 ease-in-out",
                 isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
             )}>
                 {/* Profile Section */}
