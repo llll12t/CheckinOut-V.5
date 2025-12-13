@@ -229,8 +229,8 @@ export default function CheckInPage() {
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
 
-                    // Calculate distance if config exists
-                    if (locationConfig) {
+                    // Calculate distance only if location check is enabled
+                    if (locationConfig && locationConfig.enabled) {
                         const dist = calculateDistance(
                             lat,
                             lng,
@@ -238,14 +238,9 @@ export default function CheckInPage() {
                             locationConfig.longitude
                         );
                         setDistance(dist);
-
-                        // Validate only if enabled
-                        if (locationConfig.enabled) {
-                            setIsLocationValid(dist <= locationConfig.radius);
-                        } else {
-                            setIsLocationValid(true);
-                        }
+                        setIsLocationValid(dist <= locationConfig.radius);
                     } else {
+                        // Location check disabled - no distance calculation
                         setDistance(null);
                         setIsLocationValid(true);
                     }
