@@ -701,7 +701,7 @@ export default function CheckInPage() {
 
             <Button
                 onClick={() => setStep(2)}
-                className="w-full h-14 text-lg rounded-2xl bg-[#0047BA] hover:bg-[#0047BA] shadow-lg shadow-blue-900/20 mt-4"
+                className="w-full h-14 text-lg rounded-2xl bg-green-500 hover:bg-green-500 shadow-lg shadow-blue-900/20 mt-4"
             >
                 ถัดไป
             </Button>
@@ -770,7 +770,7 @@ export default function CheckInPage() {
                 <Button
                     onClick={() => setStep(3)}
                     disabled={!photo}
-                    className="flex-1 h-14 text-lg rounded-2xl bg-[#0047BA] hover:bg-[#0047BA] shadow-lg shadow-blue-900/20"
+                    className="flex-1 h-14 text-lg rounded-2xl bg-green-600 hover:bg-green-700 shadow-lg shadow-blue-900/20"
                 >
                     ถัดไป
                 </Button>
@@ -863,7 +863,7 @@ export default function CheckInPage() {
                 <Button
                     onClick={handleSubmit}
                     disabled={loading || !location || showSuccess || (!isLocationValid && !locationNote.trim())}
-                    className="w-2/3 h-14 text-lg rounded-2xl bg-[#0047BA] hover:bg-[#0047BA] shadow-lg shadow-blue-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-2/3 h-14 text-lg rounded-2xl bg-green-600 hover:bg-green-700 shadow-lg shadow-blue-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {loading ? "กำลังบันทึก..." : showSuccess ? "สำเร็จ!" : "ยืนยัน"}
                 </Button>
