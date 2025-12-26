@@ -365,14 +365,13 @@ export default function PayrollPage() {
                 if (!emp.id) continue;
 
                 // Determine Work Time Config for this employee
-                // Priority: Position > Department > Global
-                const posOverride = emp.position && config?.positionWorkTimes ? config.positionWorkTimes[emp.position] : undefined;
+                // Priority: Department > Global
                 const deptOverride = emp.department && config?.departmentWorkTimes ? config.departmentWorkTimes[emp.department] : undefined;
 
                 const checkInConfig = {
-                    hour: posOverride?.checkInHour ?? deptOverride?.checkInHour ?? config?.checkInHour ?? 9,
-                    minute: posOverride?.checkInMinute ?? deptOverride?.checkInMinute ?? config?.checkInMinute ?? 0,
-                    gracePeriod: posOverride?.lateGracePeriod ?? deptOverride?.lateGracePeriod ?? config?.lateGracePeriod ?? 0
+                    hour: deptOverride?.checkInHour ?? config?.checkInHour ?? 9,
+                    minute: deptOverride?.checkInMinute ?? config?.checkInMinute ?? 0,
+                    gracePeriod: deptOverride?.lateGracePeriod ?? config?.lateGracePeriod ?? 0
                 };
 
                 // Fetch Attendance & OT
