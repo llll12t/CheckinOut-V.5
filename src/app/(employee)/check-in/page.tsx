@@ -682,7 +682,7 @@ export default function CheckInPage() {
 
             <Button
                 onClick={() => setStep(2)}
-                className="w-full h-14 text-lg rounded-2xl bg-[#00BF4D] hover:bg-[#00338D] shadow-lg shadow-blue-900/20 mt-4"
+                className="w-full h-14 text-lg rounded-2xl bg-[#0047BA] hover:bg-[#0047BA] shadow-lg shadow-blue-900/20 mt-4"
             >
                 ถัดไป
             </Button>
@@ -751,7 +751,7 @@ export default function CheckInPage() {
                 <Button
                     onClick={() => setStep(3)}
                     disabled={!photo}
-                    className="flex-1 h-14 text-lg rounded-2xl bg-[#0047BA] hover:bg-[#00338D] shadow-lg shadow-blue-900/20"
+                    className="flex-1 h-14 text-lg rounded-2xl bg-[#0047BA] hover:bg-[#0047BA] shadow-lg shadow-blue-900/20"
                 >
                     ถัดไป
                 </Button>
