@@ -364,6 +364,17 @@ export default function PayrollPage() {
             for (const emp of targetEmployees) {
                 if (!emp.id) continue;
 
+                // Determine Work Time Config for this employee
+                // Priority: Position > Department > Global
+                const posOverride = emp.position && config?.positionWorkTimes ? config.positionWorkTimes[emp.position] : undefined;
+                const deptOverride = emp.department && config?.departmentWorkTimes ? config.departmentWorkTimes[emp.department] : undefined;
+
+                const checkInConfig = {
+                    hour: posOverride?.checkInHour ?? deptOverride?.checkInHour ?? config?.checkInHour ?? 9,
+                    minute: posOverride?.checkInMinute ?? deptOverride?.checkInMinute ?? config?.checkInMinute ?? 0,
+                    gracePeriod: posOverride?.lateGracePeriod ?? deptOverride?.lateGracePeriod ?? config?.lateGracePeriod ?? 0
+                };
+
                 // Fetch Attendance & OT
                 const [attendance, otRequests] = await Promise.all([
                     attendanceService.getHistory(emp.id, startDate, endDate),
@@ -405,7 +416,7 @@ export default function PayrollPage() {
                     });
 
                     if (earliestCheckIn) {
-                        totalLateMinutes += getLateMinutes(earliestCheckIn);
+                        totalLateMinutes += getLateMinutes(earliestCheckIn, checkInConfig);
                     }
                 });
 

@@ -7,112 +7,130 @@ export interface IndexCheckResult {
     status: "ok" | "missing" | "error";
     indexUrl?: string;
     error?: string;
+    fields?: { fieldPath: string; order: "ASCENDING" | "DESCENDING" }[];
 }
 
 /**
  * List of all queries that require composite indexes in this app
  */
-const REQUIRED_QUERIES = [
-    {
-        name: "Attendance by Employee (with date order)",
-        collection: "attendance",
-        buildQuery: () => query(
-            collection(db, "attendance"),
-            where("employeeId", "==", "__test__"),
-            orderBy("date", "desc"),
-            limit(1)
-        )
-    },
-    {
-        name: "Attendance by Date Range",
-        collection: "attendance",
-        buildQuery: () => {
-            const now = new Date();
-            return query(
+const REQUIRED_QUERIES: {
+    name: string;
+    collection: string;
+    buildQuery: () => any;
+    fields?: { fieldPath: string; order: "ASCENDING" | "DESCENDING" }[];
+}[] = [
+        {
+            name: "Attendance by Employee (with date order)",
+            collection: "attendance",
+            buildQuery: () => query(
                 collection(db, "attendance"),
-                where("date", ">=", Timestamp.fromDate(now)),
-                where("date", "<=", Timestamp.fromDate(now)),
+                where("employeeId", "==", "__test__"),
                 orderBy("date", "desc"),
                 limit(1)
-            );
-        }
-    },
-    {
-        name: "Leave Requests by Employee",
-        collection: "leaveRequests",
-        buildQuery: () => query(
-            collection(db, "leaveRequests"),
-            where("employeeId", "==", "__test__"),
-            orderBy("createdAt", "desc"),
-            limit(1)
-        )
-    },
-    {
-        name: "Leave Requests by Date Range",
-        collection: "leaveRequests",
-        buildQuery: () => {
-            const now = new Date();
-            return query(
+            ),
+            fields: [
+                { fieldPath: "employeeId", order: "ASCENDING" },
+                { fieldPath: "date", order: "DESCENDING" }
+            ]
+        },
+        {
+            name: "Attendance by Date Range",
+            collection: "attendance",
+            buildQuery: () => {
+                const now = new Date();
+                return query(
+                    collection(db, "attendance"),
+                    where("date", ">=", Timestamp.fromDate(now)),
+                    where("date", "<=", Timestamp.fromDate(now)),
+                    orderBy("date", "desc"),
+                    limit(1)
+                );
+            }
+        },
+        {
+            name: "Leave Requests by Employee",
+            collection: "leaveRequests",
+            buildQuery: () => query(
                 collection(db, "leaveRequests"),
-                where("startDate", ">=", Timestamp.fromDate(now)),
-                where("startDate", "<=", Timestamp.fromDate(now)),
-                orderBy("startDate", "desc"),
+                where("employeeId", "==", "__test__"),
+                orderBy("createdAt", "desc"),
                 limit(1)
-            );
-        }
-    },
-    {
-        name: "OT Requests by Employee",
-        collection: "otRequests",
-        buildQuery: () => query(
-            collection(db, "otRequests"),
-            where("employeeId", "==", "__test__"),
-            orderBy("createdAt", "desc"),
-            limit(1)
-        )
-    },
-    {
-        name: "OT Requests by Date Range",
-        collection: "otRequests",
-        buildQuery: () => {
-            const now = new Date();
-            return query(
+            ),
+            fields: [
+                { fieldPath: "employeeId", order: "ASCENDING" },
+                { fieldPath: "createdAt", order: "DESCENDING" }
+            ]
+        },
+        {
+            name: "Leave Requests by Date Range",
+            collection: "leaveRequests",
+            buildQuery: () => {
+                const now = new Date();
+                return query(
+                    collection(db, "leaveRequests"),
+                    where("startDate", ">=", Timestamp.fromDate(now)),
+                    where("startDate", "<=", Timestamp.fromDate(now)),
+                    orderBy("startDate", "desc"),
+                    limit(1)
+                );
+            }
+        },
+        {
+            name: "OT Requests by Employee",
+            collection: "otRequests",
+            buildQuery: () => query(
                 collection(db, "otRequests"),
-                where("date", ">=", Timestamp.fromDate(now)),
-                where("date", "<=", Timestamp.fromDate(now)),
-                orderBy("date", "desc"),
+                where("employeeId", "==", "__test__"),
+                orderBy("createdAt", "desc"),
                 limit(1)
-            );
+            ),
+            fields: [
+                { fieldPath: "employeeId", order: "ASCENDING" },
+                { fieldPath: "createdAt", order: "DESCENDING" }
+            ]
+        },
+        {
+            name: "OT Requests by Date Range",
+            collection: "otRequests",
+            buildQuery: () => {
+                const now = new Date();
+                return query(
+                    collection(db, "otRequests"),
+                    where("date", ">=", Timestamp.fromDate(now)),
+                    where("date", "<=", Timestamp.fromDate(now)),
+                    orderBy("date", "desc"),
+                    limit(1)
+                );
+            }
+        },
+        {
+            name: "Employees by LINE User ID",
+            collection: "employees",
+            buildQuery: () => query(
+                collection(db, "employees"),
+                where("lineUserId", "==", "__test__"),
+                limit(1)
+            )
+        },
+        {
+            name: "Employees by Phone",
+            collection: "employees",
+            buildQuery: () => query(
+                collection(db, "employees"),
+                where("phone", "==", "__test__"),
+                limit(1)
+            )
+        },
+        {
+            name: "Admins by Email",
+            collection: "admins",
+            buildQuery: () => query(
+                collection(db, "admins"),
+                where("email", "==", "__test__"),
+                limit(1)
+            )
         }
-    },
-    {
-        name: "Employees by LINE User ID",
-        collection: "employees",
-        buildQuery: () => query(
-            collection(db, "employees"),
-            where("lineUserId", "==", "__test__"),
-            limit(1)
-        )
-    },
-    {
-        name: "Employees by Phone",
-        collection: "employees",
-        buildQuery: () => query(
-            collection(db, "employees"),
-            where("phone", "==", "__test__"),
-            limit(1)
-        )
-    },
-    {
-        name: "Admins by Email",
-        collection: "admins",
-        buildQuery: () => query(
-            collection(db, "admins"),
-            where("email", "==", "__test__"),
-            limit(1)
-        )
-    }
-];
+    ];
 
 /**
  * Extract index creation URL from Firebase error message
@@ -136,7 +154,8 @@ export async function checkAllIndexes(): Promise<IndexCheckResult[]> {
             results.push({
                 queryName: queryDef.name,
                 collection: queryDef.collection,
-                status: "ok"
+                status: "ok",
+                fields: queryDef.fields
             });
         } catch (error: any) {
             const errorMessage = error?.message || String(error);
@@ -148,7 +167,8 @@ export async function checkAllIndexes(): Promise<IndexCheckResult[]> {
                     collection: queryDef.collection,
                     status: "missing",
                     indexUrl: indexUrl,
-                    error: "ต้องสร้าง Index"
+                    error: "ต้องสร้าง Index",
+                    fields: queryDef.fields
                 });
             } else {
                 // Other errors (e.g., permission denied) - likely OK

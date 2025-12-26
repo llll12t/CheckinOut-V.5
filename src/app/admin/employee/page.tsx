@@ -130,10 +130,10 @@ export default function EmployeePage() {
                         <div className="flex gap-2">
                             <Button
                                 onClick={handleAddEmployee}
-                                className="bg-[#5C6BC0] hover:bg-[#5C6BC0]/90 text-white rounded-xl px-6 gap-2"
+                                className="bg-primary-dark hover:bg-primary-dark/90 text-white rounded-xl px-6 gap-2"
                             >
                                 <Plus className="w-4 h-4" />
-                                Add Employee
+                                เพิ่มพนักงาน
                             </Button>
 
                         </div>

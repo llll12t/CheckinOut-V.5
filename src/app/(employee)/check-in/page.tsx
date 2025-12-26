@@ -682,7 +682,7 @@ export default function CheckInPage() {
 
             <Button
                 onClick={() => setStep(2)}
-                className="w-full h-14 text-lg rounded-2xl bg-[#0047BA] hover:bg-[#00338D] shadow-lg shadow-blue-900/20 mt-4"
+                className="w-full h-14 text-lg rounded-2xl bg-[#00BF4D] hover:bg-[#00338D] shadow-lg shadow-blue-900/20 mt-4"
             >
                 ถัดไป
             </Button>
@@ -844,7 +844,7 @@ export default function CheckInPage() {
                 <Button
                     onClick={handleSubmit}
                     disabled={loading || !location || showSuccess || (!isLocationValid && !locationNote.trim())}
-                    className="w-2/3 h-14 text-lg rounded-2xl bg-[#0047BA] hover:bg-[#00338D] shadow-lg shadow-blue-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-2/3 h-14 text-lg rounded-2xl bg-[#00BF4D] hover:bg-[#00338D] shadow-lg shadow-blue-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {loading ? "กำลังบันทึก..." : showSuccess ? "สำเร็จ!" : "ยืนยัน"}
                 </Button>
@@ -859,7 +859,7 @@ export default function CheckInPage() {
                 {/* Success Notification */}
                 {showSuccess && (
                     <div className="fixed top-0 left-0 right-0 z-50 p-4 animate-in slide-in-from-top-10 fade-in duration-300">
-                        <div className="bg-[#1DB446] text-white px-6 py-4 rounded-2xl shadow-xl flex items-center gap-3 mx-auto max-w-sm">
+                        <div className="bg-[#00BF4D] text-white px-6 py-4 rounded-2xl shadow-xl flex items-center gap-3 mx-auto max-w-sm">
                             <div className="p-2 bg-white/20 rounded-full">
                                 <CheckCircle className="w-5 h-5 text-white" />
                             </div>

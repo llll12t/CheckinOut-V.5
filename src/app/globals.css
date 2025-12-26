@@ -1,22 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --primary-light: #ececec;
-  --primary: #252525;
-  --primary-dark: #000000;
+  --primary-light: #D1FAE5;
+  --primary: #059669;
+  --primary-dark: #064E3B;
   --secondary: #313131;
-  --accent: #FFFFFF;
+  --accent: #afa0a0;
   --text: #000000;
-  --subtext: #a3a3a3;
-  --border: #adadad;
-  --success: #4CAF50;
-  --error: #F28A8A;
-  --warning: #FBC02D;
-  --info: #42A5F5;
+  --subtext: #6B7280;
+  --border: #d6d6d6;
+  --success: #10B981;
+  --error: #EF4444;
+  --warning: #F59E0B;
+  --info: #3B82F6;
 
-  --background: #dbdbdb;
+  --background: #F3F4F6;
   --foreground: var(--text);
-  --card: #e6e6e6;
+  --card: #FFFFFF;
 
   /* Fonts */
   --font-barlow: 'Barlow', sans-serif;
@@ -25,10 +25,10 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #171717;
+    --background: #111827;
     --foreground: #000000;
-    --card: #2a2a2a;
-    --border: var(--primary-dark);
+    --card: #1F2937;
+    --border: #d6d6d6;
   }
 }
 
@@ -48,7 +48,7 @@ body {
 
 .border {
   background-color: #ffffff;
-  border: 1px solid #dfdfdf;
+  border: 1px solid var(--border);
 }
 
 .bg-card {
@@ -58,7 +58,7 @@ body {
 
 
 .bg-primary {
-  background: linear-gradient(180deg, #EBDACA 0%, #F5ECE4 50%, #FFFFFF 100%);
+  background: linear-gradient(180deg, #D1FAE5 0%, #E0F2F1 50%, #FFFFFF 100%);
 }
 
 .bg-primary-light {
