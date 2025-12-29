@@ -44,6 +44,146 @@ export default function SwapRequestPage() {
         return selectedDate >= minDate;
     };
 
+    const sendFlexMessage = async (data: { workDate: Date, holidayDate: Date, reason: string }) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const liff = (window as any).liff;
+        if (liff && liff.isInClient()) {
+            try {
+                await liff.sendMessages([
+                    {
+                        type: "flex",
+                        altText: "ส่งคำขอสลับวันหยุดสำเร็จ",
+                        contents: {
+                            type: "bubble",
+                            header: {
+                                type: "box",
+                                layout: "vertical",
+                                contents: [
+                                    {
+                                        type: "text",
+                                        text: "ส่งคำขอสำเร็จ",
+                                        weight: "bold",
+                                        color: "#1DB446",
+                                        size: "sm"
+                                    },
+                                    {
+                                        type: "text",
+                                        text: "ขอสลับวันหยุด",
+                                        weight: "bold",
+                                        size: "xl",
+                                        margin: "md"
+                                    }
+                                ]
+                            },
+                            body: {
+                                type: "box",
+                                layout: "vertical",
+                                contents: [
+                                    {
+                                        type: "box",
+                                        layout: "vertical",
+                                        margin: "lg",
+                                        spacing: "sm",
+                                        contents: [
+                                            {
+                                                type: "box",
+                                                layout: "baseline",
+                                                spacing: "sm",
+                                                contents: [
+                                                    {
+                                                        type: "text",
+                                                        text: "มาทำ",
+                                                        color: "#aaaaaa",
+                                                        size: "sm",
+                                                        flex: 2
+                                                    },
+                                                    {
+                                                        type: "text",
+                                                        text: data.workDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }),
+                                                        wrap: true,
+                                                        color: "#666666",
+                                                        size: "sm",
+                                                        flex: 4
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                type: "box",
+                                                layout: "baseline",
+                                                spacing: "sm",
+                                                contents: [
+                                                    {
+                                                        type: "text",
+                                                        text: "หยุด",
+                                                        color: "#aaaaaa",
+                                                        size: "sm",
+                                                        flex: 2
+                                                    },
+                                                    {
+                                                        type: "text",
+                                                        text: data.holidayDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }),
+                                                        wrap: true,
+                                                        color: "#666666",
+                                                        size: "sm",
+                                                        flex: 4
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                type: "box",
+                                                layout: "baseline",
+                                                spacing: "sm",
+                                                contents: [
+                                                    {
+                                                        type: "text",
+                                                        text: "เหตุผล",
+                                                        color: "#aaaaaa",
+                                                        size: "sm",
+                                                        flex: 2
+                                                    },
+                                                    {
+                                                        type: "text",
+                                                        text: data.reason || "-",
+                                                        wrap: true,
+                                                        color: "#666666",
+                                                        size: "sm",
+                                                        flex: 4
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                ]);
+            } catch (error) {
+                console.error("Error sending flex message:", error);
+            }
+        }
+    };
+
+    const notifyAdmin = async (data: { workDate: Date, holidayDate: Date, reason: string }) => {
+        try {
+            await fetch("/api/line/notify-admin", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    type: "swap",
+                    employeeName: employee?.name || "Unknown",
+                    details: `มาทำ ${data.workDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })} หยุด ${data.holidayDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}`,
+                    reason: data.reason,
+                    date: new Date().toISOString()
+                }),
+            });
+        } catch (error) {
+            console.error("Error notifying admin:", error);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!employee) return;
@@ -64,6 +204,20 @@ export default function SwapRequestPage() {
                 reason,
                 status: "รออนุมัติ",
                 createdAt: new Date(),
+            });
+
+            // Send Flex Message (to user)
+            await sendFlexMessage({
+                workDate: new Date(workDate),
+                holidayDate: new Date(holidayDate),
+                reason
+            });
+
+            // Notify Admin (to group)
+            await notifyAdmin({
+                workDate: new Date(workDate),
+                holidayDate: new Date(holidayDate),
+                reason
             });
 
             setShowSuccess(true);
