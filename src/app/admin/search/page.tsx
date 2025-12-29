@@ -463,18 +463,8 @@ export default function SearchPage() {
                                                         }
                                                         const absentDays = Math.max(0, elapsedWorkDays - attendanceDays - leaveDays);
 
-                                                        const lateCount = monthlyAttendances.filter(a => {
-                                                            if (a.status === "สาย") return true;
-                                                            if (a.status === "เข้างาน" && a.checkIn && isLate(new Date(a.checkIn))) return true;
-                                                            return false;
-                                                        }).length;
-                                                        const lateMinutes = monthlyAttendances.reduce((sum, a) => {
-                                                            if (a.status === "สาย") return sum + (a.lateMinutes || 0);
-                                                            if (a.status === "เข้างาน" && a.checkIn && isLate(new Date(a.checkIn))) {
-                                                                return sum + getLateMinutes(new Date(a.checkIn));
-                                                            }
-                                                            return sum;
-                                                        }, 0);
+                                                        const lateCount = monthlyAttendances.filter(a => (a.lateMinutes || 0) > 0).length;
+                                                        const lateMinutes = monthlyAttendances.reduce((sum, a) => sum + (a.lateMinutes || 0), 0);
 
                                                         const totalOTHours = otRequests
                                                             .filter(ot => {
@@ -581,18 +571,9 @@ export default function SearchPage() {
                                                                 }
                                                                 const absentDays = Math.max(0, elapsedWorkDays - attendanceDays - leaveDays);
 
-                                                                const lateCount = attendances.filter(a => {
-                                                                    if (a.status === "สาย") return true;
-                                                                    if (a.status === "เข้างาน" && a.checkIn && isLate(new Date(a.checkIn))) return true;
-                                                                    return false;
-                                                                }).length;
-                                                                const lateMinutes = attendances.reduce((sum, a) => {
-                                                                    if (a.status === "สาย") return sum + (a.lateMinutes || 0);
-                                                                    if (a.status === "เข้างาน" && a.checkIn && isLate(new Date(a.checkIn))) {
-                                                                        return sum + getLateMinutes(new Date(a.checkIn));
-                                                                    }
-                                                                    return sum;
-                                                                }, 0);
+                                                                const lateCount = attendances.filter(a => (a.lateMinutes || 0) > 0).length;
+                                                                const lateMinutes = attendances.reduce((sum, a) => sum + (a.lateMinutes || 0), 0);
+
                                                                 const totalOTHours = otRequests.filter(ot => {
                                                                     const otDate = new Date(ot.date);
                                                                     return ot.status === "อนุมัติ" && otDate.getMonth() === (month - 1) && otDate.getFullYear() === year;

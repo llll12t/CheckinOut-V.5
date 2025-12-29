@@ -5,16 +5,17 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { attendanceService, employeeService, type Attendance, type Employee } from "@/lib/firestore";
 import { useAdmin } from "@/components/auth/AuthProvider";
 import { Users, Calendar, Clock, CheckCircle, XCircle, AlertTriangle, Download, Search } from "lucide-react";
+import { formatMinutesToHours } from "@/lib/workTime";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from "date-fns";
 import { th } from "date-fns/locale";
 
 interface DailySummary {
     date: Date;
     employee: Employee;
-    checkIn?: Date;
-    checkOut?: Date;
-    beforeBreak?: Date;
-    afterBreak?: Date;
+    checkIn?: Date | null;
+    checkOut?: Date | null;
+    beforeBreak?: Date | null;
+    afterBreak?: Date | null;
     isLate: boolean;
     lateMinutes?: number;
     offsiteCount: number;
@@ -75,10 +76,14 @@ export default function DailySummaryPage() {
                 const hasCheckedIn = checkInRec || lateRec;
                 const isHoliday = emp.weeklyHolidays?.includes(date.getDay()) || false;
 
+                // ดึง lateMinutes จาก record (อาจอยู่ใน checkInRec หรือ lateRec)
+                const actualLateMinutes = lateRec?.lateMinutes || checkInRec?.lateMinutes || 0;
+                const isActuallyLate = actualLateMinutes > 0;
+
                 let status: DailySummary["status"] = "ไม่มาทำงาน";
                 if (isHoliday) {
                     status = "วันหยุด";
-                } else if (lateRec) {
+                } else if (lateRec || isActuallyLate) {
                     status = "สาย";
                 } else if (hasCheckedIn) {
                     status = "ปกติ";
@@ -91,8 +96,8 @@ export default function DailySummaryPage() {
                     checkOut: checkOutRec?.checkOut,
                     beforeBreak: beforeBreakRec?.checkIn,
                     afterBreak: afterBreakRec?.checkIn,
-                    isLate: !!lateRec,
-                    lateMinutes: lateRec?.lateMinutes,
+                    isLate: isActuallyLate,
+                    lateMinutes: actualLateMinutes > 0 ? actualLateMinutes : undefined,
                     offsiteCount: offsiteRecs.length,
                     status,
                 };
@@ -106,7 +111,7 @@ export default function DailySummaryPage() {
         }
     };
 
-    const formatTime = (date?: Date) => {
+    const formatTime = (date?: Date | null) => {
         if (!date) return "-";
         return format(new Date(date), "HH:mm");
     };
@@ -301,7 +306,7 @@ export default function DailySummaryPage() {
                                         </td>
                                         <td className="px-4 py-3 text-center text-sm">
                                             {summary.isLate && summary.lateMinutes && (
-                                                <span className="text-orange-600">สาย {summary.lateMinutes} นาที</span>
+                                                <span className="text-orange-600">สาย {formatMinutesToHours(summary.lateMinutes)}</span>
                                             )}
                                         </td>
                                     </tr>

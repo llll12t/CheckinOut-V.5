@@ -15,7 +15,7 @@ import { CustomAlert } from "@/components/ui/custom-alert";
 
 export default function CheckInPage() {
     const router = useRouter();
-    const { employee } = useEmployee();
+    const { employee, refreshEmployee } = useEmployee();
     const [step, setStep] = useState(1);
     const [currentTime, setCurrentTime] = useState(new Date());
     const [loading, setLoading] = useState(false);
@@ -89,24 +89,21 @@ export default function CheckInPage() {
         return () => clearInterval(timer);
     }, []);
 
-    // Check status on load
+    // Force Refresh Employee Data on Load (to get latest shift)
+    useEffect(() => {
+        refreshEmployee();
+    }, []);
+
+    // Load Shift and Status when Employee is ready
     useEffect(() => {
         if (employee?.id) {
+            console.log("=== Employee Changed ===", employee.name, "shiftId:", employee.shiftId);
             checkTodayStatus();
             loadEmployeeShift();
         }
     }, [employee]);
 
-    // Cleanup camera on unmount
-    useEffect(() => {
-        return () => {
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-            }
-        };
-    }, [stream]);
-
-    // Load settings
+    // Check status on load
     useEffect(() => {
         const loadSettings = async () => {
             try {
@@ -127,15 +124,24 @@ export default function CheckInPage() {
     }, []);
 
     const loadEmployeeShift = async () => {
-        if (!employee?.shiftId) return;
-
         try {
-            const shift = await shiftService.getById(employee.shiftId);
-            if (shift) {
-                setCurrentShift(shift);
-                // Debug log
-                console.log("Loaded shift:", shift);
+            // รีเซ็ต currentShift ก่อนโหลดใหม่ (สำคัญเมื่อเปลี่ยนกลับไป default)
+            setCurrentShift(null);
+
+            let shift: Shift | null = null;
+
+            if (employee?.shiftId) {
+                shift = await shiftService.getById(employee.shiftId);
             }
+
+            // If no specific shift assigned or not found, try to find default shift
+            if (!shift) {
+                const allShifts = await shiftService.getAll();
+                shift = allShifts.find(s => s.isDefault) || null;
+            }
+
+            // ตั้งค่า shift (หรือ null ถ้าไม่เจอ)
+            setCurrentShift(shift);
         } catch (error) {
             console.error("Error loading shift:", error);
         }
@@ -299,6 +305,39 @@ export default function CheckInPage() {
         }
     };
 
+    const getEffectiveWorkTimeConfig = () => {
+        // 1. Priority: Assigned Shift or Loaded Default Shift
+        if (currentShift) {
+            return {
+                checkInHour: currentShift.checkInHour,
+                checkInMinute: currentShift.checkInMinute,
+                checkOutHour: currentShift.checkOutHour,
+                checkOutMinute: currentShift.checkOutMinute,
+                lateGracePeriod: currentShift.lateGracePeriod ?? 0
+            };
+        }
+
+        // 2. Priority: System Config
+        if (systemConfig) {
+            return {
+                checkInHour: systemConfig.checkInHour ?? 9,
+                checkInMinute: systemConfig.checkInMinute ?? 0,
+                checkOutHour: systemConfig.checkOutHour ?? 18,
+                checkOutMinute: systemConfig.checkOutMinute ?? 0,
+                lateGracePeriod: systemConfig.lateGracePeriod ?? 0
+            };
+        }
+
+        // 3. Fallback: Hardcoded Default
+        return {
+            checkInHour: 9,
+            checkInMinute: 0,
+            checkOutHour: 18,
+            checkOutMinute: 0,
+            lateGracePeriod: 0
+        };
+    };
+
     const sendFlexMessage = async (type: string, time: Date, location: string, dist: number | null) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const liff = (window as any).liff;
@@ -308,41 +347,16 @@ export default function CheckInPage() {
                 let statusText = "";
                 let statusColor = "#666666";
 
-                if (workTimeEnabled && systemConfig) {
-                    // Default Config (fallback)
-                    let configToUse = {
-                        checkInHour: systemConfig?.checkInHour ?? 9,
-                        checkInMinute: systemConfig?.checkInMinute ?? 0,
-                        checkOutHour: systemConfig?.checkOutHour ?? 18,
-                        checkOutMinute: systemConfig?.checkOutMinute ?? 0,
-                        lateGracePeriod: systemConfig?.lateGracePeriod ?? 0
-                    };
-
-                    // OVERRIDE with Shift Config if available
-                    if (currentShift) {
-                        configToUse = {
-                            checkInHour: currentShift.checkInHour,
-                            checkInMinute: currentShift.checkInMinute,
-                            checkOutHour: currentShift.checkOutHour,
-                            checkOutMinute: currentShift.checkOutMinute,
-                            lateGracePeriod: currentShift.lateGracePeriod ?? 0 // Shift specific grace period (if added in future) or default 0
-                        };
-                        console.log("Using Shift Config:", configToUse);
-                    }
-
-                    const checkInConfig = {
-                        hour: configToUse.checkInHour,
-                        minute: configToUse.checkInMinute,
-                        gracePeriod: configToUse.lateGracePeriod
-                    };
+                if (workTimeEnabled) {
+                    const config = getEffectiveWorkTimeConfig();
 
                     if (type === "เข้างาน") {
                         // Custom isLate logic for SECONDS precision (Requested: > 09:00:59 is Late)
                         const standardTime = new Date(time);
-                        standardTime.setHours(checkInConfig.hour, checkInConfig.minute, 0, 0);
+                        standardTime.setHours(config.checkInHour, config.checkInMinute, 0, 0);
 
                         // Add grace period (minutes)
-                        standardTime.setMinutes(standardTime.getMinutes() + checkInConfig.gracePeriod);
+                        standardTime.setMinutes(standardTime.getMinutes() + config.lateGracePeriod);
                         // Ensure we cover up to 59 seconds of the grace minute
                         standardTime.setSeconds(59);
                         standardTime.setMilliseconds(999);
@@ -350,7 +364,7 @@ export default function CheckInPage() {
                         if (time > standardTime) {
                             // Calculate late minutes
                             const baseTime = new Date(time);
-                            baseTime.setHours(checkInConfig.hour, checkInConfig.minute, 0, 0);
+                            baseTime.setHours(config.checkInHour, config.checkInMinute, 0, 0);
 
                             const diffMs = time.getTime() - baseTime.getTime();
                             const lateMinutes = Math.floor(diffMs / (1000 * 60));
@@ -589,7 +603,7 @@ export default function CheckInPage() {
 
             // ป้องกันออกงานซ้ำ
             if (checkInType === "ออกงาน") {
-                const checkInRecord = mainActions.find(a => a.status === "เข้างาน");
+                const checkInRecord = mainActions.find(a => a.status === "เข้างาน" || a.status === "สาย");
                 const hasCheckedOut = mainActions.some(a => a.status === "ออกงาน");
                 if (!checkInRecord) {
                     showAlert("ยังไม่ได้เข้างาน", "กรุณาลงเวลาเข้างานก่อน", "warning");
@@ -665,44 +679,42 @@ export default function CheckInPage() {
                 };
 
                 // Calculate Late Logic for Database
-                if (checkInType === "เข้างาน" && workTimeEnabled && systemConfig) {
-                    // Default Config
-                    let configToUse = {
-                        checkInHour: systemConfig?.checkInHour ?? 9,
-                        checkInMinute: systemConfig?.checkInMinute ?? 0,
-                        gracePeriod: systemConfig?.lateGracePeriod ?? 0
-                    };
+                if (checkInType === "เข้างาน" && workTimeEnabled) {
+                    // โหลด shift ใหม่โดยตรงเพื่อป้องกัน race condition
+                    let shiftConfig = null;
 
-                    // OVERRIDE with Shift Config if available
-                    if (currentShift) {
-                        configToUse = {
-                            checkInHour: currentShift.checkInHour,
-                            checkInMinute: currentShift.checkInMinute,
-                            gracePeriod: currentShift.lateGracePeriod ?? 0
-                        };
+                    if (employee?.shiftId) {
+                        const freshShift = await shiftService.getById(employee.shiftId);
+
+                        if (freshShift) {
+                            shiftConfig = {
+                                checkInHour: freshShift.checkInHour,
+                                checkInMinute: freshShift.checkInMinute,
+                                lateGracePeriod: freshShift.lateGracePeriod ?? 0
+                            };
+                        }
                     }
 
-                    const checkInConfig = {
-                        hour: configToUse.checkInHour,
-                        minute: configToUse.checkInMinute,
-                        gracePeriod: configToUse.gracePeriod
-                    };
+                    // ถ้าไม่ได้ shift ให้ใช้ค่าจาก state หรือ system config
+                    const config = shiftConfig || getEffectiveWorkTimeConfig();
 
                     // Custom isLate logic for SECONDS precision
                     const standardTime = new Date(now);
-                    standardTime.setHours(checkInConfig.hour, checkInConfig.minute, 0, 0);
-                    standardTime.setMinutes(standardTime.getMinutes() + checkInConfig.gracePeriod);
+                    standardTime.setHours(config.checkInHour, config.checkInMinute, 0, 0);
+                    standardTime.setMinutes(standardTime.getMinutes() + config.lateGracePeriod);
                     standardTime.setSeconds(59);
                     standardTime.setMilliseconds(999);
 
                     if (now > standardTime) {
-                        attendanceData.status = "สาย";
+                        // status remains "เข้างาน" even if late, as per requirement
+                        // attendanceData.status = "สาย"; 
 
                         // Calculate late minutes
                         const baseTime = new Date(now);
-                        baseTime.setHours(checkInConfig.hour, checkInConfig.minute, 0, 0);
+                        baseTime.setHours(config.checkInHour, config.checkInMinute, 0, 0);
                         const diffMs = now.getTime() - baseTime.getTime();
                         attendanceData.lateMinutes = Math.floor(diffMs / (1000 * 60));
+                        console.log("handleSubmit: Calculated lateMinutes:", attendanceData.lateMinutes);
                     }
                 }
 
@@ -713,6 +725,20 @@ export default function CheckInPage() {
 
                 if (checkInType === "ออกงาน") {
                     attendanceData.checkOut = now;
+
+                    // Calculate OT if enabled
+                    if (workTimeEnabled) {
+                        const config = getEffectiveWorkTimeConfig();
+                        const checkOutConfig = {
+                            hour: config.checkOutHour,
+                            minute: config.checkOutMinute,
+                            minOTMinutes: 0 // Calculate all OT minutes, let Admin/Approval decide policy
+                        };
+                        const otMins = getOTMinutes(now, checkOutConfig);
+                        if (otMins > 0) {
+                            attendanceData.otMinutes = otMins;
+                        }
+                    }
                 }
 
                 if (photoBase64) {
@@ -766,17 +792,48 @@ export default function CheckInPage() {
 
     const renderStep1 = () => (
         <div className="space-y-6">
-            {/* Clock Card */}
-            <div className="bg-white rounded-3xl p-6 shadow-lg border border-blue-50 text-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-50 text-[#00338D] mb-3">
-                    <Clock className="w-6 h-6" />
+            {/* Clock Card - Green/White Theme */}
+            <div className="bg-white rounded-2xl p-4 shadow-sm border border-green-100">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center">
+                            <Clock className="w-6 h-6 text-green-600" />
+                        </div>
+                        <div>
+                            <div className="text-3xl font-bold text-gray-800 tracking-tight">
+                                {currentTime.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                            </div>
+                            <div className="text-gray-500 text-sm">
+                                {currentTime.toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </div>
+                        </div>
+                    </div>
+                    <div className="text-right">
+                        <div className="text-green-600 font-medium text-sm">{currentTime.toLocaleDateString('th-TH', { weekday: 'long' })}</div>
+                    </div>
                 </div>
-                <h2 className="text-4xl font-bold text-gray-800 tracking-tight">
-                    {currentTime.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false })}
-                </h2>
-                <p className="text-gray-500 mt-1">
-                    {currentTime.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })}
-                </p>
+            </div>
+
+            {/* Shift Info Card - Compact */}
+            <div className="bg-blue-50/50 rounded-xl px-4 py-2 border border-blue-100 text-xs">
+                <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                        <span className="text-gray-500">กะ:</span>
+                        <span className="font-semibold text-blue-800">
+                            {currentShift?.name || "ปกติ"}
+                        </span>
+                        <span className="text-gray-400">|</span>
+                        <span className="font-mono text-gray-700">
+                            {(() => {
+                                const conf = getEffectiveWorkTimeConfig();
+                                return `${conf.checkInHour.toString().padStart(2, '0')}:${conf.checkInMinute.toString().padStart(2, '0')} - ${conf.checkOutHour.toString().padStart(2, '0')}:${conf.checkOutMinute.toString().padStart(2, '0')}`;
+                            })()}
+                        </span>
+                    </div>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] ${currentShift ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                        {currentShift ? "✓" : "ปกติ"}
+                    </span>
+                </div>
             </div>
 
             {/* Type Selection - 2 Columns */}

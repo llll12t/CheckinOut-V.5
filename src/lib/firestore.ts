@@ -47,8 +47,8 @@ export interface Attendance {
     employeeId: string;
     employeeName: string;
     date: Date;
-    checkIn?: Date;
-    checkOut?: Date;
+    checkIn?: Date | null;
+    checkOut?: Date | null;
     status: "เข้างาน" | "ออกงาน" | "ลางาน" | "สาย" | "ก่อนพัก" | "หลังพัก" | "ออกนอกพื้นที่ขาไป" | "ออกนอกพื้นที่ขากลับ";
     location?: string;
     photo?: string;
@@ -174,7 +174,12 @@ export const employeeService = {
             data.endDate = null;
         }
 
-        // Remove undefined fields
+        // Handle shiftId - if undefined, set to null to clear it in DB
+        if ('shiftId' in employee && (employee.shiftId === undefined || employee.shiftId === null)) {
+            data.shiftId = null;
+        }
+
+        // Remove undefined fields (except those we explicitly set to null above)
         Object.keys(data).forEach(key => data[key] === undefined && delete data[key]);
 
         await updateDoc(docRef, data);

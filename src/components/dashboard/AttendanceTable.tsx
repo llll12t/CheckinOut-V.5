@@ -131,8 +131,9 @@ export function AttendanceTable({ attendances, onEdit, onDelete, isSuperAdmin = 
 
                                                 // Only show late if workTimeEnabled
                                                 if (workTimeEnabled && (attendance.status === "เข้างาน" || attendance.status === "สาย") && attendance.checkIn) {
-                                                    if (isLate(attendance.checkIn)) {
-                                                        const lateMinutes = getLateMinutes(attendance.checkIn);
+                                                    // ใช้ค่า lateMinutes ที่บันทึกไว้ในฐานข้อมูล แทนการคำนวณใหม่
+                                                    const lateMinutes = attendance.lateMinutes || 0;
+                                                    if (lateMinutes > 0) {
                                                         notes.push(
                                                             <span key="late" className="inline-flex items-center px-2 py-1 rounded-md bg-red-50 text-red-700 text-xs font-medium">
                                                                 สาย {formatMinutesToHours(lateMinutes)}

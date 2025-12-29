@@ -84,10 +84,10 @@ export function AttendanceFormModal({ isOpen, onClose, attendance, onSuccess }: 
             const dateStr = formData.date;
             const checkInDateTime = formData.checkInTime
                 ? new Date(`${dateStr}T${formData.checkInTime}:00`)
-                : undefined;
+                : null;
             const checkOutDateTime = formData.checkOutTime
                 ? new Date(`${dateStr}T${formData.checkOutTime}:00`)
-                : undefined;
+                : null;
 
             const attendanceData = {
                 employeeId: formData.employeeId,
