@@ -54,12 +54,17 @@ export function AdminFormModal({ isOpen, onClose, admin, onSuccess }: AdminFormM
 
         try {
             if (admin?.id) {
-                await adminService.update(admin.id, {
+                // Build update data - only include lineUserId if it has a value
+                const updateData: any = {
                     name: formData.name,
                     email: formData.email,
                     role: formData.role,
-                    lineUserId: formData.lineUserId || undefined,
-                });
+                };
+                // Only include lineUserId if it's not empty
+                if (formData.lineUserId && formData.lineUserId.trim()) {
+                    updateData.lineUserId = formData.lineUserId.trim();
+                }
+                await adminService.update(admin.id, updateData);
             } else {
                 // Create new admin
                 // 1. Create in Firebase Auth using secondary app to avoid logging out current user
@@ -69,14 +74,17 @@ export function AdminFormModal({ isOpen, onClose, admin, onSuccess }: AdminFormM
                 try {
                     await createUserWithEmailAndPassword(secondaryAuth, formData.email, formData.password);
 
-                    // 2. Create in Firestore
-                    await adminService.create({
+                    // 2. Create in Firestore - only include lineUserId if it has a value
+                    const createData: any = {
                         name: formData.name,
                         email: formData.email,
                         role: formData.role,
                         createdAt: new Date(),
-                        lineUserId: formData.lineUserId || undefined,
-                    });
+                    };
+                    if (formData.lineUserId && formData.lineUserId.trim()) {
+                        createData.lineUserId = formData.lineUserId.trim();
+                    }
+                    await adminService.create(createData);
                 } catch (authError: any) {
                     if (authError.code === 'auth/email-already-in-use') {
                         alert("อีเมลนี้มีผู้ใช้งานแล้วในระบบ");

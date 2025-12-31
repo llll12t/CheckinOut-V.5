@@ -137,11 +137,11 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
                     </div>
                     <Link
                         href="/admin/settings"
-                        className="p-2 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
+                        className="p-2 bg-primary-dark rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
                         title="ตั้งค่า"
                         onClick={onClose}
                     >
-                        <Settings className="w-4 h-4 text-gray-500" />
+                        <Settings className="w-4 h-4 text-gray-100" />
                     </Link>
                 </div>
 

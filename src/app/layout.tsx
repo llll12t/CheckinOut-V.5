@@ -13,7 +13,6 @@ const notoSansThai = Noto_Sans_Thai({
   subsets: ["thai", "latin"],
   variable: "--font-noto-sans-thai",
 });
-
 export const metadata: Metadata = {
   title: "Check In Out",
   description: "เชคชื่อ ลงเวลา สถานที่",
