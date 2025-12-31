@@ -164,13 +164,13 @@ export default function DashboardPage() {
                 subtitle={`${attendances.length} results found`}
                 searchPlaceholder="Employee |"
                 action={
-                     <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                         {/* Date Picker */}
                         <input
                             type="date"
                             value={format(selectedDate, "yyyy-MM-dd")}
                             onChange={(e) => setSelectedDate(new Date(e.target.value))}
-                            className="w-full sm:w-48 h-11 px-4 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer shadow-sm hover:shadow-md transition-all duration-200"
+                            className="w-full h-11 px-4 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer shadow-sm hover:shadow-md transition-all duration-200"
                         />
 
                         {/* Add Button - Modern Design */}
@@ -270,4 +270,3 @@ export default function DashboardPage() {
         </div>
     );
 }
-
