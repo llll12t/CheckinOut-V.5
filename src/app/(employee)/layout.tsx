@@ -1,4 +1,6 @@
 import { EmployeeProvider } from "@/contexts/EmployeeContext";
+import { AuthProvider } from "@/context/AuthContext";
+import LiffLoginWrapper from "@/components/auth/LiffLoginWrapper";
 
 export default function EmployeeLayout({
     children,
@@ -6,8 +8,12 @@ export default function EmployeeLayout({
     children: React.ReactNode;
 }) {
     return (
-        <EmployeeProvider>
-            {children}
-        </EmployeeProvider>
+        <AuthProvider>
+            <LiffLoginWrapper>
+                <EmployeeProvider>
+                    {children}
+                </EmployeeProvider>
+            </LiffLoginWrapper>
+        </AuthProvider>
     );
 }

@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Employee, employeeService } from "@/lib/firestore";
-import Script from "next/script";
+import { useAuth } from "@/context/AuthContext";
 
 interface EmployeeContextType {
     employee: Employee | null;
@@ -21,127 +21,76 @@ const EmployeeContext = createContext<EmployeeContextType>({
 });
 
 export function EmployeeProvider({ children }: { children: ReactNode }) {
+    const { userProfile, loading: authLoading } = useAuth();
     const [employee, setEmployee] = useState<Employee | null>(null);
     const [loading, setLoading] = useState(true);
     const [lineUserId, setLineUserId] = useState<string | null>(null);
     const [lineProfile, setLineProfile] = useState<any | null>(null);
 
-    const initLiff = async () => {
-        try {
-            // DEV MODE: Skip LIFF and use mock data
-            const isDevMode = process.env.NEXT_PUBLIC_DEV_MODE === "true";
-            if (isDevMode) {
-                console.log("🔧 DEV MODE: Skipping LINE login, using mock data");
-                const mockUserId = "dev_user_001";
-                const mockProfile = {
-                    userId: mockUserId,
-                    displayName: "Dev User (ทดสอบ)",
-                    pictureUrl: "https://via.placeholder.com/150/059669/FFFFFF?text=DEV",
-                };
-                setLineUserId(mockUserId);
-                setLineProfile(mockProfile);
-                await fetchEmployee(mockUserId);
-                return;
-            }
+    useEffect(() => {
+        const loadEmployee = async () => {
+            if (authLoading) return; // Wait for auth to finish
 
-            // Wait for LIFF SDK to be available
-            if (!window.liff) {
-                console.error("LIFF SDK not loaded");
-                setLoading(false);
-                return;
-            }
+            if (userProfile) {
+                // User is authenticated via Firebase (and likely LIFF)
+                // Use the info from userProfile
+                // userProfile.lineId is crucial here
+                if (userProfile.lineId) {
+                    setLineUserId(userProfile.lineId);
 
-            const liff = window.liff;
-            console.log("Initializing LIFF...");
+                    // Set lineProfile from userProfile data
+                    setLineProfile({
+                        userId: userProfile.lineId,
+                        displayName: userProfile.displayName,
+                        pictureUrl: userProfile.pictureUrl || userProfile.imageUrl,
+                    });
 
-            // Check if LIFF ID is available
-            const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
-            if (!liffId) {
-                console.error("LIFF ID not found in environment variables");
-                setLoading(false);
-                return;
-            }
-
-            console.log("LIFF ID:", liffId);
-
-            // Initialize LIFF
-            await liff.init({ liffId });
-            console.log("LIFF initialized successfully");
-
-            // Check if user is logged in
-            if (liff.isLoggedIn()) {
-                console.log("User is logged in");
-                const profile = await liff.getProfile();
-                console.log("User profile:", profile);
-                setLineUserId(profile.userId);
-                setLineProfile(profile);
-                await fetchEmployee(profile.userId);
-            } else {
-                console.log("User is not logged in");
-                // For development/testing without actual LIFF login, check localStorage
-                const mockId = localStorage.getItem("mockLineUserId");
-                if (mockId) {
-                    console.log("Using mock ID:", mockId);
-                    setLineUserId(mockId);
-                    // Try to get mock profile from localStorage
-                    const mockProfileStr = localStorage.getItem("mockLineProfile");
-                    if (mockProfileStr) {
-                        try {
-                            const mockProfile = JSON.parse(mockProfileStr);
-                            setLineProfile(mockProfile);
-                        } catch (e) {
-                            console.error("Error parsing mock profile:", e);
-                        }
+                    // Fetch Employee Data
+                    try {
+                        const data = await employeeService.getByLineUserId(userProfile.lineId);
+                        setEmployee(data);
+                    } catch (error) {
+                        console.error("Error fetching employee:", error);
+                        setEmployee(null);
                     }
-                    await fetchEmployee(mockId);
                 } else {
-                    // Auto login if not in LIFF browser
-                    if (!liff.isInClient()) {
-                        console.log("Not in LINE app, redirecting to login...");
-                        liff.login();
-                    } else {
-                        setLoading(false);
-                    }
+                    // User authenticated but no lineId? (Maybe email login?)
+                    // For now, assume this context is for LINE-bound employees.
+                    console.warn("User authenticated but has no lineId:", userProfile);
                 }
-            }
-        } catch (error) {
-            console.error("LIFF Initialization failed:", error);
-            setLoading(false);
-        }
-    };
-
-    const fetchEmployee = async (userId: string) => {
-        try {
-            const data = await employeeService.getByLineUserId(userId);
-            setEmployee(data);
-        } catch (error: any) {
-            // Only log error if it's not a permission error
-            // Permission errors are expected for users who haven't registered yet
-            if (error?.code !== 'permission-denied' && !error?.message?.includes('Missing or insufficient permissions')) {
-                console.error("Error fetching employee:", error);
             } else {
-                console.log("User not registered yet or insufficient permissions");
+                // Not logged in
+                setEmployee(null);
+                setLineUserId(null);
+                setLineProfile(null);
             }
-            // Set employee to null if not found or permission denied
-            setEmployee(null);
-        } finally {
             setLoading(false);
-        }
-    };
+        };
+
+        loadEmployee();
+    }, [userProfile, authLoading]);
 
     const refreshEmployee = async () => {
         if (lineUserId) {
-            await fetchEmployee(lineUserId);
+            try {
+                const data = await employeeService.getByLineUserId(lineUserId);
+                setEmployee(data);
+            } catch (error) {
+                console.error("Error refreshing employee:", error);
+            }
         }
     };
 
+    // Combine loading states
+    const isLoading = loading || authLoading;
+
     return (
-        <EmployeeContext.Provider value={{ employee, loading, lineUserId, lineProfile, refreshEmployee }}>
-            <Script
-                src="https://static.line-scdn.net/liff/edge/2/sdk.js"
-                onLoad={initLiff}
-            />
-            {children}
+        <EmployeeContext.Provider value={{ employee, loading: isLoading, lineUserId, lineProfile, refreshEmployee }}>
+            {authLoading ? (
+                <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                    <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+            ) : children}
         </EmployeeContext.Provider>
     );
 }

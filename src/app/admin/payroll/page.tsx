@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { employeeService, attendanceService, otService, systemConfigService, type Employee, type Attendance, type OTRequest, type SystemConfig } from "@/lib/firestore";
+import { employeeService, attendanceService, otService, systemConfigService, shiftService, type Employee, type Attendance, type OTRequest, type SystemConfig } from "@/lib/firestore";
 import { Search, Calendar, DollarSign, Download, Filter } from "lucide-react";
 import { format, startOfWeek, endOfWeek } from "date-fns";
 import { th } from "date-fns/locale";
@@ -333,8 +333,16 @@ export default function PayrollPage() {
                 endDate.setHours(23, 59, 59, 999);
             }
 
-            // 2. Fetch Employees
-            const allEmployees = await employeeService.getAll();
+            // 2. Fetch Employees and Shifts
+            const [allEmployees, allShifts] = await Promise.all([
+                employeeService.getAll(),
+                shiftService.getAll()
+            ]);
+
+            // Create Shifts Map for faster lookup
+            const shiftsMap = new Map(allShifts.map(s => [s.id!, s]));
+            const defaultShift = allShifts.find(s => s.isDefault);
+
             let targetEmployees: Employee[] = [];
 
             if (employeeType === "ประจำ - รายเดือน") {
@@ -357,18 +365,37 @@ export default function PayrollPage() {
             // Use config values or defaults
             const otMultiplier = config?.otMultiplier ?? 1.5;
             const otMultiplierHoliday = config?.otMultiplierHoliday ?? 3.0;
-            const weeklyHolidays = config?.weeklyHolidays ?? [0, 6];
+            // Default global holidays if employee doesn't have specific ones
+            const globalWeeklyHolidays = config?.weeklyHolidays ?? [0, 6];
             const lateDeductionType = config?.lateDeductionType ?? "pro-rated";
             const lateDeductionRate = config?.lateDeductionRate ?? 0;
 
             for (const emp of targetEmployees) {
                 if (!emp.id) continue;
 
+                // ==========================================
+                // 1. Determine Employee's Shift Config
+                // ==========================================
+                let currentShift = defaultShift;
+                if (emp.shiftId && shiftsMap.has(emp.shiftId)) {
+                    currentShift = shiftsMap.get(emp.shiftId);
+                }
+
+                // If no shift found (even default), fallback to global system config
                 const checkInConfig = {
-                    hour: config?.checkInHour ?? 9,
-                    minute: config?.checkInMinute ?? 0,
-                    gracePeriod: config?.lateGracePeriod ?? 0
+                    hour: currentShift?.checkInHour ?? config?.checkInHour ?? 9,
+                    minute: currentShift?.checkInMinute ?? config?.checkInMinute ?? 0,
+                    gracePeriod: currentShift?.lateGracePeriod ?? config?.lateGracePeriod ?? 0
                 };
+
+                // ==========================================
+                // 2. Determine Employee's Weekly Holidays
+                // ==========================================
+                // Use employee's specific holidays if defined, otherwise fallback to global
+                const empWeeklyHolidays = (emp.weeklyHolidays && emp.weeklyHolidays.length > 0)
+                    ? emp.weeklyHolidays
+                    : globalWeeklyHolidays;
+
 
                 // Fetch Attendance & OT
                 const [attendance, otRequests] = await Promise.all([
@@ -411,6 +438,7 @@ export default function PayrollPage() {
                     });
 
                     if (earliestCheckIn) {
+                        // Use the employee-specific shift config for late calc
                         totalLateMinutes += getLateMinutes(earliestCheckIn, checkInConfig);
                     }
                 });
@@ -513,7 +541,8 @@ export default function PayrollPage() {
                             otPaySpecial += hours * hourlyRate * customHoliday.otMultiplier;
                         } else {
                             const dayOfWeek = ot.date.getDay();
-                            const isHoliday = weeklyHolidays.includes(dayOfWeek);
+                            // Use employee-specific weekly holidays
+                            const isHoliday = empWeeklyHolidays.includes(dayOfWeek);
 
                             if (isHoliday) {
                                 otHoursHoliday += hours;

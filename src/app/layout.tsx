@@ -15,8 +15,8 @@ const notoSansThai = Noto_Sans_Thai({
 });
 
 export const metadata: Metadata = {
-  title: "CHECKINOUT - Admin Dashboard",
-  description: "Employee attendance management system",
+  title: "Check In Out",
+  description: "ระบบเช็คชื่อออนไลน์",
 };
 
 export function generateViewport() {
