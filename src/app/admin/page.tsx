@@ -164,22 +164,22 @@ export default function DashboardPage() {
                 subtitle={`${attendances.length} results found`}
                 searchPlaceholder="Employee |"
                 action={
-                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                    <div className="grid grid-cols-2 gap-3 w-full">
                         {/* Date Picker */}
                         <input
                             type="date"
                             value={format(selectedDate, "yyyy-MM-dd")}
                             onChange={(e) => setSelectedDate(new Date(e.target.value))}
-                            className="w-full h-11 px-4 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer shadow-sm hover:shadow-md transition-all duration-200"
+                            className="w-full h-11 px-3 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer shadow-sm hover:shadow-md transition-all duration-200"
                         />
 
-                        {/* Add Button - Modern Design */}
+                        {/* Add Button */}
                         <Button
                             onClick={handleAddAttendance}
-                            className="w-full sm:w-auto h-11 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl px-5 gap-2 shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 transition-all duration-200 font-medium"
+                            className="w-full h-11 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl px-3 gap-1.5 shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 transition-all duration-200 font-medium text-sm"
                         >
-                            <Plus className="w-4 h-4" />
-                            <span>บันทึกการลงเวลา</span>
+                            <Plus className="w-4 h-4 flex-shrink-0" />
+                            <span className="truncate">บันทึกลงเวลา</span>
                         </Button>
                     </div>
                 }
