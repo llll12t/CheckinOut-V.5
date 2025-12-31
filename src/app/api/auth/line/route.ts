@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import admin from '@/lib/firebaseAdmin';
+import { getFirestore } from "firebase-admin/firestore";
 
 /**
  * POST /api/auth/line
@@ -87,7 +88,7 @@ export async function POST(request: Request) {
         // Verify the LINE access token by calling LINE API
         const lineResponse = await fetch('https://api.line.me/v2/profile', {
             headers: {
-                Authorization: `Bearer ${accessToken}`
+                Authorization: `Bearer ${accessToken} `
             }
         });
 
