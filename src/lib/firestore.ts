@@ -716,6 +716,7 @@ export interface Admin {
     role: "super_admin" | "admin";
     createdAt: Date;
     lastLogin?: Date;
+    lineUserId?: string; // LINE User ID สำหรับ Auto Login ผ่าน LINE
 }
 
 // Admin CRUD operations
@@ -755,6 +756,21 @@ export const adminService = {
 
     async getByEmail(email: string) {
         const q = query(collection(db, "admins"), where("email", "==", email));
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+            const docSnap = querySnapshot.docs[0];
+            return {
+                id: docSnap.id,
+                ...docSnap.data(),
+                createdAt: docSnap.data().createdAt?.toDate(),
+                lastLogin: docSnap.data().lastLogin?.toDate(),
+            } as Admin;
+        }
+        return null;
+    },
+
+    async getByLineUserId(lineUserId: string) {
+        const q = query(collection(db, "admins"), where("lineUserId", "==", lineUserId));
         const querySnapshot = await getDocs(q);
         if (!querySnapshot.empty) {
             const docSnap = querySnapshot.docs[0];

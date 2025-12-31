@@ -2,11 +2,12 @@
 
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Lock, Mail, AlertCircle } from "lucide-react";
+import { Lock, Mail, AlertCircle, Loader2 } from "lucide-react";
 import { adminService } from "@/lib/firestore";
+import useAdminLiffAuth from "@/hooks/useAdminLiffAuth";
 
 export default function AdminLoginPage() {
     const [email, setEmail] = useState("");
@@ -14,6 +15,24 @@ export default function AdminLoginPage() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+
+    // LINE Auto Login hook
+    const {
+        loading: liffLoading,
+        error: liffError,
+        isInLineApp,
+        adminProfile,
+        needsLink,
+        linkProfile
+    } = useAdminLiffAuth();
+
+    // Auto redirect if logged in via LINE
+    useEffect(() => {
+        if (adminProfile && !liffLoading) {
+            console.log("Admin logged in via LINE:", adminProfile);
+            router.push("/admin");
+        }
+    }, [adminProfile, liffLoading, router]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -46,6 +65,85 @@ export default function AdminLoginPage() {
         }
     };
 
+    // Show loading while LIFF is initializing (only in LINE browser)
+    if (isInLineApp && liffLoading) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50 flex items-center justify-center p-4">
+                <div className="text-center">
+                    <div className="w-20 h-20 bg-[#059669] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                        <Loader2 className="w-10 h-10 text-white animate-spin" />
+                    </div>
+                    <h2 className="text-xl font-bold text-gray-800 mb-2">กำลังเข้าสู่ระบบ...</h2>
+                    <p className="text-gray-500 text-sm">เชื่อมต่อกับ LINE</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Show message if LINE account is not linked to any admin
+    if (isInLineApp && needsLink) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50 flex items-center justify-center p-4">
+                <div className="w-full max-w-md">
+                    <div className="bg-white rounded-3xl shadow-2xl p-8 border border-gray-100">
+                        <div className="text-center mb-6">
+                            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <AlertCircle className="w-8 h-8 text-yellow-600" />
+                            </div>
+                            <h2 className="text-xl font-bold text-gray-800 mb-2">ไม่พบบัญชีผู้ดูแลระบบ</h2>
+                            <p className="text-gray-600 text-sm">
+                                บัญชี LINE นี้ ({linkProfile?.displayName || 'Unknown'}) ยังไม่ได้ผูกกับบัญชีผู้ดูแลระบบ
+                            </p>
+                        </div>
+
+                        <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                            <p className="text-sm text-gray-600 mb-2">
+                                <strong>LINE User ID:</strong>
+                            </p>
+                            <code className="text-xs bg-gray-200 px-2 py-1 rounded break-all">
+                                {linkProfile?.lineId || '-'}
+                            </code>
+                        </div>
+
+                        <p className="text-sm text-gray-500 text-center mb-4">
+                            กรุณาติดต่อ Super Admin เพื่อเพิ่ม LINE User ID นี้ในหน้าจัดการผู้ดูแลระบบ
+                        </p>
+
+                        <p className="text-xs text-gray-400 text-center">
+                            หรือใช้ Email/Password เข้าสู่ระบบผ่าน Browser ปกติ
+                        </p>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Show LIFF error if any
+    if (isInLineApp && liffError) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-red-50 flex items-center justify-center p-4">
+                <div className="w-full max-w-md">
+                    <div className="bg-white rounded-3xl shadow-2xl p-8 border border-gray-100">
+                        <div className="text-center mb-6">
+                            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <AlertCircle className="w-8 h-8 text-red-600" />
+                            </div>
+                            <h2 className="text-xl font-bold text-gray-800 mb-2">เกิดข้อผิดพลาด</h2>
+                            <p className="text-red-600 text-sm">{liffError}</p>
+                        </div>
+                        <Button
+                            onClick={() => window.location.reload()}
+                            className="w-full h-12 bg-red-600 hover:bg-red-700 text-white rounded-xl"
+                        >
+                            ลองใหม่
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Normal Email/Password login form
     return (
         <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50 flex items-center justify-center p-4">
             <div className="w-full max-w-md">
@@ -130,8 +228,6 @@ export default function AdminLoginPage() {
                             )}
                         </Button>
                     </form>
-
-
                 </div>
 
                 {/* Footer */}

@@ -15,8 +15,8 @@ const notoSansThai = Noto_Sans_Thai({
 });
 
 export const metadata: Metadata = {
-  title: "Check In Out",
-  description: "ระบบเช็คชื่อออนไลน์",
+  title: "HRBP | บริษัท เน็กซ์ คอร์ปอเรท จำกัด",
+  description: "บริษัท เน็กซ์ คอร์ปอเรท จำกัด",
 };
 
 export function generateViewport() {

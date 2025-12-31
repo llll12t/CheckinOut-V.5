@@ -23,6 +23,7 @@ export function AdminFormModal({ isOpen, onClose, admin, onSuccess }: AdminFormM
         email: "",
         password: "",
         role: "admin" as "admin" | "super_admin",
+        lineUserId: "",
     });
 
     useEffect(() => {
@@ -32,6 +33,7 @@ export function AdminFormModal({ isOpen, onClose, admin, onSuccess }: AdminFormM
                 email: admin.email || "",
                 password: "", // Password not shown for edit
                 role: admin.role || "admin",
+                lineUserId: admin.lineUserId || "",
             });
         } else {
             setFormData({
@@ -39,6 +41,7 @@ export function AdminFormModal({ isOpen, onClose, admin, onSuccess }: AdminFormM
                 email: "",
                 password: "",
                 role: "admin",
+                lineUserId: "",
             });
         }
     }, [admin]);
@@ -54,7 +57,8 @@ export function AdminFormModal({ isOpen, onClose, admin, onSuccess }: AdminFormM
                 await adminService.update(admin.id, {
                     name: formData.name,
                     email: formData.email,
-                    role: formData.role
+                    role: formData.role,
+                    lineUserId: formData.lineUserId || undefined,
                 });
             } else {
                 // Create new admin
@@ -71,6 +75,7 @@ export function AdminFormModal({ isOpen, onClose, admin, onSuccess }: AdminFormM
                         email: formData.email,
                         role: formData.role,
                         createdAt: new Date(),
+                        lineUserId: formData.lineUserId || undefined,
                     });
                 } catch (authError: any) {
                     if (authError.code === 'auth/email-already-in-use') {
@@ -177,6 +182,21 @@ export function AdminFormModal({ isOpen, onClose, admin, onSuccess }: AdminFormM
                                 <option value="admin">Admin</option>
                                 <option value="super_admin">Super Admin</option>
                             </select>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                LINE User ID
+                                <span className="text-gray-400 text-xs ml-2">(สำหรับ Auto Login ผ่าน LINE)</span>
+                            </label>
+                            <input
+                                type="text"
+                                value={formData.lineUserId}
+                                onChange={(e) => setFormData({ ...formData, lineUserId: e.target.value })}
+                                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#EBDACA] focus:border-transparent"
+                                placeholder="U1234567890abcdef..."
+                            />
+                            <p className="text-xs text-gray-400 mt-1">ใส่ LINE User ID เพื่อให้ Admin สามารถ Login อัตโนมัติเมื่อเปิดผ่าน LINE</p>
                         </div>
                     </div>
 
