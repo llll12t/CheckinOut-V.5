@@ -164,22 +164,22 @@ export default function DashboardPage() {
                 subtitle={`${attendances.length} results found`}
                 searchPlaceholder="Employee |"
                 action={
-                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                        <div className="relative w-full sm:w-auto">
-                            <input
-                                type="date"
-                                value={format(selectedDate, "yyyy-MM-dd")}
-                                onChange={(e) => setSelectedDate(new Date(e.target.value))}
-                                className="w-full sm:w-auto pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                            />
-                            <CalendarIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
-                        </div>
+                     <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                        {/* Date Picker */}
+                        <input
+                            type="date"
+                            value={format(selectedDate, "yyyy-MM-dd")}
+                            onChange={(e) => setSelectedDate(new Date(e.target.value))}
+                            className="w-full sm:w-48 h-11 px-4 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 cursor-pointer shadow-sm hover:shadow-md transition-all duration-200"
+                        />
+
+                        {/* Add Button - Modern Design */}
                         <Button
                             onClick={handleAddAttendance}
-                            className="w-full sm:w-auto bg-primary-dark text-white rounded-xl px-6 gap-2"
+                            className="w-full sm:w-auto h-11 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl px-5 gap-2 shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 transition-all duration-200 font-medium"
                         >
                             <Plus className="w-4 h-4" />
-                            บันทึกการลงเวลา
+                            <span>บันทึกการลงเวลา</span>
                         </Button>
                     </div>
                 }
@@ -270,3 +270,4 @@ export default function DashboardPage() {
         </div>
     );
 }
+
