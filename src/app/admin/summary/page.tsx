@@ -14,8 +14,6 @@ interface DailySummary {
     employee: Employee;
     checkIn?: Date | null;
     checkOut?: Date | null;
-    beforeBreak?: Date | null;
-    afterBreak?: Date | null;
     isLate: boolean;
     lateMinutes?: number;
     offsiteCount: number;
@@ -67,8 +65,6 @@ export default function DailySummaryPage() {
                 const checkInRec = empAttendances.find(a => a.status === "เข้างาน");
                 const checkOutRec = empAttendances.find(a => a.status === "ออกงาน");
                 const lateRec = empAttendances.find(a => a.status === "สาย");
-                const beforeBreakRec = empAttendances.find(a => a.status === "ก่อนพัก");
-                const afterBreakRec = empAttendances.find(a => a.status === "หลังพัก");
                 const offsiteRecs = empAttendances.filter(a =>
                     a.status === "ออกนอกพื้นที่ขาไป" || a.status === "ออกนอกพื้นที่ขากลับ"
                 );
@@ -94,8 +90,6 @@ export default function DailySummaryPage() {
                     employee: emp,
                     checkIn: checkInRec?.checkIn || lateRec?.checkIn,
                     checkOut: checkOutRec?.checkOut,
-                    beforeBreak: beforeBreakRec?.checkIn,
-                    afterBreak: afterBreakRec?.checkIn,
                     isLate: isActuallyLate,
                     lateMinutes: actualLateMinutes > 0 ? actualLateMinutes : undefined,
                     offsiteCount: offsiteRecs.length,
@@ -150,14 +144,12 @@ export default function DailySummaryPage() {
 
     // Export CSV
     const exportCSV = () => {
-        const headers = ["พนักงาน", "แผนก", "สถานะ", "เข้างาน", "ก่อนพัก", "หลังพัก", "ออกงาน", "ออกพื้นที่", "สาย(นาที)"];
+        const headers = ["พนักงาน", "แผนก", "สถานะ", "เข้างาน", "ออกงาน", "ออกพื้นที่", "สาย(นาที)"];
         const rows = filteredSummaries.map(s => [
             s.employee.name,
             s.employee.department || "-",
             s.status,
             formatTime(s.checkIn),
-            formatTime(s.beforeBreak),
-            formatTime(s.afterBreak),
             formatTime(s.checkOut),
             s.offsiteCount > 0 ? `${s.offsiteCount} ครั้ง` : "-",
             s.lateMinutes ? s.lateMinutes.toString() : "-",
@@ -265,8 +257,6 @@ export default function DailySummaryPage() {
                                     <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">พนักงาน</th>
                                     <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">สถานะ</th>
                                     <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">เข้างาน</th>
-                                    <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">ก่อนพัก</th>
-                                    <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">หลังพัก</th>
                                     <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">ออกงาน</th>
                                     <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">ออกพื้นที่</th>
                                     <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">หมายเหตุ</th>
@@ -292,8 +282,6 @@ export default function DailySummaryPage() {
                                                 {formatTime(summary.checkIn)}
                                             </span>
                                         </td>
-                                        <td className="px-4 py-3 text-center text-sm text-gray-600">{formatTime(summary.beforeBreak)}</td>
-                                        <td className="px-4 py-3 text-center text-sm text-gray-600">{formatTime(summary.afterBreak)}</td>
                                         <td className="px-4 py-3 text-center text-sm text-gray-700">{formatTime(summary.checkOut)}</td>
                                         <td className="px-4 py-3 text-center">
                                             {summary.offsiteCount > 0 ? (
@@ -313,7 +301,7 @@ export default function DailySummaryPage() {
                                 ))}
                                 {filteredSummaries.length === 0 && (
                                     <tr>
-                                        <td colSpan={8} className="px-4 py-12 text-center text-gray-500">
+                                        <td colSpan={6} className="px-4 py-12 text-center text-gray-500">
                                             ไม่มีข้อมูล
                                         </td>
                                     </tr>
