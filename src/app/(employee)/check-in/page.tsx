@@ -934,7 +934,7 @@ export default function CheckInPage() {
 
             <Button
                 onClick={() => setStep(2)}
-                className="w-full h-14 text-lg rounded-2xl bg-green-600 hover:bg-green-800 shadow-lg shadow-blue-900/20 mt-4"
+                className="w-full h-14 text-lg rounded-2xl bg-primary hover:bg-primary/80 shadow-lg shadow-blue-900/20 mt-4"
             >
                 ถัดไป
             </Button>
@@ -977,7 +977,7 @@ export default function CheckInPage() {
                     <Button
                         onClick={capturePhoto}
                         disabled={!cameraActive}
-                        className="h-12 bg-green-600 hover:bg-green-700 text-white rounded-xl"
+                        className="h-12 bg-primary hover:bg-primary/80 text-white rounded-xl"
                     >
                         ถ่าย
                     </Button>
@@ -1003,7 +1003,7 @@ export default function CheckInPage() {
                 <Button
                     onClick={() => setStep(3)}
                     disabled={!photo}
-                    className="flex-1 h-14 text-lg rounded-2xl bg-green-600 hover:bg-green-700 shadow-lg shadow-blue-900/20"
+                    className="flex-1 h-14 text-lg rounded-2xl bg-primary hover:bg-primary/80 shadow-lg shadow-blue-900/20"
                 >
                     ถัดไป
                 </Button>
@@ -1096,7 +1096,7 @@ export default function CheckInPage() {
                 <Button
                     onClick={handleSubmit}
                     disabled={loading || !location || showSuccess || (!isLocationValid && !locationNote.trim())}
-                    className="w-2/3 h-14 text-lg rounded-2xl bg-green-600 hover:bg-green-700 shadow-lg shadow-blue-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-2/3 h-14 text-lg rounded-2xl bg-primary hover:bg-primary/80 shadow-lg shadow-blue-900/20 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {loading ? "กำลังบันทึก..." : showSuccess ? "สำเร็จ!" : "ยืนยัน"}
                 </Button>
@@ -1111,7 +1111,7 @@ export default function CheckInPage() {
                 {/* Success Notification */}
                 {showSuccess && (
                     <div className="fixed top-0 left-0 right-0 z-50 p-4 animate-in slide-in-from-top-10 fade-in duration-300">
-                        <div className="bg-[#00BF4D] text-white px-6 py-4 rounded-2xl shadow-xl flex items-center gap-3 mx-auto max-w-sm">
+                        <div className="bg-primary text-white border border-primary px-6 py-4 rounded-2xl shadow-xl flex items-center gap-3 mx-auto max-w-sm">
                             <div className="p-2 bg-white/20 rounded-full">
                                 <CheckCircle className="w-5 h-5 text-white" />
                             </div>

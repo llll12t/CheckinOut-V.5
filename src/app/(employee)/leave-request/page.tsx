@@ -326,7 +326,6 @@ export default function LeaveRequestPage() {
                     <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
                         <FileText className="w-5 h-5 text-blue-500" />
                         แบบฟอร์มขอลางาน
-                        แบบฟอร์มขอลางาน
                     </h2>
 
                     {/* Quota Cards */}
@@ -444,7 +443,7 @@ export default function LeaveRequestPage() {
                         <Button
                             type="submit"
                             disabled={loading}
-                            className="w-full h-14 text-lg rounded-2xl bg-primary-dark hover:bg-primary-dark shadow-lg shadow-blue-900/20 mt-4"
+                            className="w-full h-14 text-lg rounded-2xl bg-primary hover:bg-primary/80 shadow-lg shadow-blue-900/20 mt-4"
                         >
                             {loading ? "กำลังส่งข้อมูล..." : (
                                 <span className="flex items-center gap-2">

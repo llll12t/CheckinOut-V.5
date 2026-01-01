@@ -6,16 +6,27 @@ import { StatsCard } from "@/components/dashboard/StatsCard";
 import { Button } from "@/components/ui/button";
 import { swapService, type SwapRequest } from "@/lib/firestore";
 import { useAdmin } from "@/components/auth/AuthProvider";
-import { ArrowLeftRight, Check, X } from "lucide-react";
+import { Check, X, Trash2, Pencil } from "lucide-react";
 import { format } from "date-fns";
-import { th } from "date-fns/locale";
 
 export default function SwapApprovalsPage() {
-    const { user } = useAdmin();
+    const { user, isSuperAdmin } = useAdmin();
     const [requests, setRequests] = useState<SwapRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState<string | null>(null);
     const [statusFilter, setStatusFilter] = useState<"all" | "รออนุมัติ" | "อนุมัติ" | "ไม่อนุมัติ">("all");
+
+    // Edit modal state
+    const [editModal, setEditModal] = useState<{ isOpen: boolean; request: SwapRequest | null }>({
+        isOpen: false,
+        request: null
+    });
+    const [editForm, setEditForm] = useState({
+        workDate: "",
+        holidayDate: "",
+        reason: "",
+        status: "รออนุมัติ" as SwapRequest["status"]
+    });
 
     useEffect(() => {
         if (user) {
@@ -60,6 +71,52 @@ export default function SwapApprovalsPage() {
         }
     };
 
+    const handleDelete = async (id: string, employeeName: string) => {
+        if (!confirm(`ต้องการลบคำขอสลับวันหยุดของ "${employeeName}" ใช่หรือไม่?`)) return;
+
+        setProcessing(id);
+        try {
+            await swapService.delete(id);
+            loadRequests();
+        } catch (error) {
+            console.error("Error deleting:", error);
+            alert("เกิดข้อผิดพลาดในการลบ");
+        } finally {
+            setProcessing(null);
+        }
+    };
+
+    const handleEdit = (request: SwapRequest) => {
+        setEditForm({
+            workDate: format(new Date(request.workDate), "yyyy-MM-dd"),
+            holidayDate: format(new Date(request.holidayDate), "yyyy-MM-dd"),
+            reason: request.reason || "",
+            status: request.status
+        });
+        setEditModal({ isOpen: true, request });
+    };
+
+    const handleSaveEdit = async () => {
+        if (!editModal.request?.id) return;
+
+        setProcessing(editModal.request.id);
+        try {
+            await swapService.update(editModal.request.id, {
+                workDate: new Date(editForm.workDate),
+                holidayDate: new Date(editForm.holidayDate),
+                reason: editForm.reason,
+                status: editForm.status
+            });
+            setEditModal({ isOpen: false, request: null });
+            loadRequests();
+        } catch (error) {
+            console.error("Error updating:", error);
+            alert("เกิดข้อผิดพลาดในการบันทึก");
+        } finally {
+            setProcessing(null);
+        }
+    };
+
     const getStatusBadge = (status: SwapRequest["status"]) => {
         switch (status) {
             case "รออนุมัติ":
@@ -89,7 +146,7 @@ export default function SwapApprovalsPage() {
     }
 
     return (
-        <div className="flex-1 p-8">
+        <div className="flex-1">
             <PageHeader
                 title="สลับวันหยุด"
                 subtitle={`${requests.length} รายการทั้งหมด`}
@@ -130,82 +187,190 @@ export default function SwapApprovalsPage() {
                 </div>
             ) : (
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <table className="w-full">
-                        <thead className="bg-gray-50">
-                            <tr>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">พนักงาน</th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">มาทำวันที่</th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">หยุดแทนวันที่</th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">เหตุผล</th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">สถานะ</th>
-                                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-700">จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {filteredRequests.map(request => (
-                                <tr key={request.id} className="hover:bg-gray-50">
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                                                <ArrowLeftRight className="w-5 h-5 text-purple-600" />
-                                            </div>
-                                            <span className="font-medium text-gray-800">{request.employeeName}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className="px-2 py-1 bg-green-50 text-green-700 rounded text-sm">
-                                            {format(new Date(request.workDate), "d MMM yyyy", { locale: th })}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className="px-2 py-1 bg-red-50 text-red-700 rounded text-sm">
-                                            {format(new Date(request.holidayDate), "d MMM yyyy", { locale: th })}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-sm text-gray-600 max-w-[200px] truncate">
-                                        {request.reason || "-"}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        {getStatusBadge(request.status)}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        {request.status === "รออนุมัติ" ? (
-                                            <div className="flex justify-center gap-2">
-                                                <Button
-                                                    size="sm"
-                                                    onClick={() => request.id && handleApprove(request.id)}
-                                                    disabled={processing === request.id}
-                                                    className="bg-green-600 hover:bg-green-700 h-8"
-                                                >
-                                                    <Check className="w-4 h-4" />
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() => request.id && handleReject(request.id)}
-                                                    disabled={processing === request.id}
-                                                    className="text-red-600 hover:bg-red-50 h-8"
-                                                >
-                                                    <X className="w-4 h-4" />
-                                                </Button>
-                                            </div>
-                                        ) : (
-                                            <div className="text-center text-gray-400 text-sm">-</div>
-                                        )}
-                                    </td>
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="bg-gray-50/50 border-b border-gray-100 text-left">
+                                    <th className="py-4 px-6 text-xs font-medium text-gray-400 uppercase tracking-wider">Name</th>
+                                    <th className="py-4 px-6 text-xs font-medium text-gray-400 uppercase tracking-wider">มาทำวันที่</th>
+                                    <th className="py-4 px-6 text-xs font-medium text-gray-400 uppercase tracking-wider">หยุดแทนวันที่</th>
+                                    <th className="py-4 px-6 text-xs font-medium text-gray-400 uppercase tracking-wider">เหตุผล</th>
+                                    <th className="py-4 px-6 text-xs font-medium text-gray-400 uppercase tracking-wider">สถานะ</th>
+                                    <th className="py-4 px-6 text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
                                 </tr>
-                            ))}
-                            {filteredRequests.length === 0 && (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                                        ไม่มีข้อมูลสลับวันหยุด
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50">
+                                {filteredRequests.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={6} className="py-12 text-center text-gray-500">
+                                            ไม่มีข้อมูลสลับวันหยุด
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    filteredRequests.map(request => (
+                                        <tr key={request.id} className="hover:bg-gray-50/50 transition-colors">
+                                            <td className="py-4 px-6">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-semibold text-sm">
+                                                        {request.employeeName.charAt(0)}
+                                                    </div>
+                                                    <span className="text-sm font-medium text-gray-700">{request.employeeName}</span>
+                                                </div>
+                                            </td>
+                                            <td className="py-4 px-6">
+                                                <span className="text-sm text-gray-600">
+                                                    {format(new Date(request.workDate), "dd-MM-yyyy")}
+                                                </span>
+                                            </td>
+                                            <td className="py-4 px-6">
+                                                <span className="text-sm text-gray-600">
+                                                    {format(new Date(request.holidayDate), "dd-MM-yyyy")}
+                                                </span>
+                                            </td>
+                                            <td className="py-4 px-6">
+                                                <span className="text-sm text-gray-600 line-clamp-2">{request.reason || "-"}</span>
+                                            </td>
+                                            <td className="py-4 px-6">
+                                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${request.status === "รออนุมัติ" ? "bg-orange-100 text-orange-700" :
+                                                    request.status === "อนุมัติ" ? "bg-green-100 text-green-700" :
+                                                        "bg-red-100 text-red-700"
+                                                    }`}>
+                                                    {request.status}
+                                                </span>
+                                            </td>
+                                            <td className="py-4 px-6">
+                                                <div className="flex gap-2">
+                                                    {/* Approve/Reject buttons for pending requests */}
+                                                    {request.status === "รออนุมัติ" && request.id && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => handleApprove(request.id!)}
+                                                                disabled={processing === request.id}
+                                                                className="p-2 hover:bg-green-100 rounded-lg transition-colors disabled:opacity-50"
+                                                                title="อนุมัติ"
+                                                            >
+                                                                <Check className="w-4 h-4 text-green-600" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleReject(request.id!)}
+                                                                disabled={processing === request.id}
+                                                                className="p-2 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
+                                                                title="ไม่อนุมัติ"
+                                                            >
+                                                                <X className="w-4 h-4 text-red-600" />
+                                                            </button>
+                                                        </>
+                                                    )}
+
+                                                    {/* Edit and Delete buttons for super_admin */}
+                                                    {isSuperAdmin && request.id && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => handleEdit(request)}
+                                                                disabled={processing === request.id}
+                                                                className="p-2 hover:bg-blue-100 rounded-lg transition-colors disabled:opacity-50"
+                                                                title="แก้ไข"
+                                                            >
+                                                                <Pencil className="w-4 h-4 text-blue-600" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDelete(request.id!, request.employeeName)}
+                                                                disabled={processing === request.id}
+                                                                className="p-2 hover:bg-red-100 rounded-lg transition-colors disabled:opacity-50"
+                                                                title="ลบ"
+                                                            >
+                                                                <Trash2 className="w-4 h-4 text-red-600" />
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Modal */}
+            {editModal.isOpen && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+                        <h3 className="text-xl font-bold text-gray-800 mb-4">แก้ไขคำขอสลับวันหยุด</h3>
+                        <p className="text-sm text-gray-500 mb-4">พนักงาน: {editModal.request?.employeeName}</p>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    วันที่มาทำงาน (แทนวันหยุด)
+                                </label>
+                                <input
+                                    type="date"
+                                    value={editForm.workDate}
+                                    onChange={(e) => setEditForm({ ...editForm, workDate: e.target.value })}
+                                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    วันที่ขอหยุดแทน
+                                </label>
+                                <input
+                                    type="date"
+                                    value={editForm.holidayDate}
+                                    onChange={(e) => setEditForm({ ...editForm, holidayDate: e.target.value })}
+                                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    เหตุผล
+                                </label>
+                                <textarea
+                                    value={editForm.reason}
+                                    onChange={(e) => setEditForm({ ...editForm, reason: e.target.value })}
+                                    rows={2}
+                                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    สถานะ
+                                </label>
+                                <select
+                                    value={editForm.status}
+                                    onChange={(e) => setEditForm({ ...editForm, status: e.target.value as SwapRequest["status"] })}
+                                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                >
+                                    <option value="รออนุมัติ">รออนุมัติ</option>
+                                    <option value="อนุมัติ">อนุมัติ</option>
+                                    <option value="ไม่อนุมัติ">ไม่อนุมัติ</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3 mt-6">
+                            <Button
+                                variant="outline"
+                                onClick={() => setEditModal({ isOpen: false, request: null })}
+                                className="flex-1"
+                            >
+                                ยกเลิก
+                            </Button>
+                            <Button
+                                onClick={handleSaveEdit}
+                                disabled={processing !== null}
+                                className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
+                            >
+                                {processing ? "กำลังบันทึก..." : "บันทึก"}
+                            </Button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
     );
 }
+

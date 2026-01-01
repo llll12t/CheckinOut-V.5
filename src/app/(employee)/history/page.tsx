@@ -77,7 +77,7 @@ export default function HistoryPage() {
                     <button
                         onClick={() => setActiveTab("attendance")}
                         className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all ${activeTab === "attendance"
-                            ? "bg-primary-dark text-white shadow-md"
+                            ? "bg-primary text-white shadow-md"
                             : "text-gray-500 hover:bg-gray-50"
                             }`}
                     >
@@ -86,7 +86,7 @@ export default function HistoryPage() {
                     <button
                         onClick={() => setActiveTab("leave")}
                         className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all ${activeTab === "leave"
-                            ? "bg-primary-dark text-white shadow-md"
+                            ? "bg-primary text-white shadow-md"
                             : "text-gray-500 hover:bg-gray-50"
                             }`}
                     >
@@ -95,7 +95,7 @@ export default function HistoryPage() {
                     <button
                         onClick={() => setActiveTab("ot")}
                         className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all ${activeTab === "ot"
-                            ? "bg-primary-dark text-white shadow-md"
+                            ? "bg-primary text-white shadow-md"
                             : "text-gray-500 hover:bg-gray-50"
                             }`}
                     >
@@ -104,7 +104,7 @@ export default function HistoryPage() {
                     <button
                         onClick={() => setActiveTab("swap")}
                         className={`flex-1 py-2.5 text-sm font-bold rounded-xl transition-all ${activeTab === "swap"
-                            ? "bg-primary-dark text-white shadow-md"
+                            ? "bg-primary text-white shadow-md"
                             : "text-gray-500 hover:bg-gray-50"
                             }`}
                     >

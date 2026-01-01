@@ -62,7 +62,7 @@ export default function MobileHomePage() {
                         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-500/10 to-transparent rounded-bl-full -mr-8 -mt-8" />
 
                         <div className="flex items-center justify-between mb-4">
-                            <div className="w-12 h-12 rounded-2xl bg-green-600 flex items-center justify-center text-white shadow-lg shadow-blue-600/30">
+                            <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg shadow-blue-600/30">
                                 <MapPin className="w-6 h-6" />
                             </div>
 

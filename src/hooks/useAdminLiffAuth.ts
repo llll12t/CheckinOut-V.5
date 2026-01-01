@@ -24,6 +24,16 @@ export default function useAdminLiffAuth(): UseAdminLiffAuthReturn {
     useEffect(() => {
         const init = async () => {
             try {
+                // Check for Mock LIFF mode
+                const isMockLiff = process.env.NEXT_PUBLIC_MOCK_LIFF === 'true';
+
+                if (isMockLiff) {
+                    console.log('🧪 Mock LIFF mode enabled - skipping LINE login');
+                    setIsInLineApp(false);
+                    setLoading(false);
+                    return;
+                }
+
                 // Check if we're in LINE's in-app browser
                 const userAgent = typeof window !== 'undefined' ? window.navigator.userAgent : '';
                 const inLineApp = /Line/i.test(userAgent);

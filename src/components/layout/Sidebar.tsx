@@ -118,7 +118,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
             )}
 
             <aside className={cn(
-                "fixed inset-y-0 left-0 z-50 w-64 bg-primary flex flex-col border-r border-gray-200 transition-transform duration-300 ease-in-out",
+                "fixed inset-y-0 left-0 z-50 w-64 bg-background flex flex-col border-r border-gray-200 transition-transform duration-300 ease-in-out",
                 isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
             )}>
                 {/* Profile Section */}
@@ -203,11 +203,8 @@ export function Sidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () =>
                 </nav>
 
                 {/* Bottom Actions */}
-                <div className="p-4 space-y-1 border-t border-gray-200/50">
-                    <button className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-white/50 rounded-xl transition-colors">
-                        <HelpCircle className="w-5 h-5 text-gray-400" />
-                        ช่วยเหลือ
-                    </button>
+                <div className="p-4 bg-gray-200 border-t border-gray-200/50">
+
                     <button
                         onClick={handleLogout}
                         className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"

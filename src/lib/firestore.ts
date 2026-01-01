@@ -564,6 +564,24 @@ export const swapService = {
         await updateDoc(docRef, { status });
     },
 
+    async update(id: string, data: Partial<Omit<SwapRequest, "id">>) {
+        const docRef = doc(db, "swapRequests", id);
+        const updateData: any = { ...data };
+
+        // Convert Date to Timestamp
+        if (data.workDate) {
+            updateData.workDate = Timestamp.fromDate(data.workDate);
+        }
+        if (data.holidayDate) {
+            updateData.holidayDate = Timestamp.fromDate(data.holidayDate);
+        }
+        if (data.createdAt) {
+            updateData.createdAt = Timestamp.fromDate(data.createdAt);
+        }
+
+        await updateDoc(docRef, updateData);
+    },
+
     async delete(id: string) {
         await deleteDoc(doc(db, "swapRequests", id));
     },

@@ -4,9 +4,9 @@
   /* Monochrome Theme Palette */
   --primary-light: #F4F4F5;
   /* Zinc-100 */
-  --primary: #18181B;
+  --primary: #009966;
   /* Zinc-900 (Nearly Black) */
-  --primary-dark: #09090B;
+  --primary-dark: #565656;
   /* Zinc-950 */
 
   --secondary: #FFFFFF;
@@ -39,7 +39,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #ffffff;
+    --background: #fdfdfd;
     /* Zinc-950 */
     --foreground: #535353;
     /* Zinc-50 */
@@ -48,9 +48,9 @@
     --border: #cfcfcf;
     /* Zinc-800 */
 
-    --primary: #000000;
-    --primary-light: #27272A;
-    --primary-dark: #000000;
+    --primary: #009966;
+    --primary-light: #ebfff7;
+    --primary-dark: #565656;
 
     --text: #FAFAFA;
     --subtext: #A1A1AA;
@@ -67,8 +67,6 @@ body {
   background-color: var(--background);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-radius: 40px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .border {
@@ -84,7 +82,7 @@ body {
 /* Black & White Gradient/Style */
 .bg-primary {
   /* Subtle monochrome gradient */
-  background: var(--background);
+  background: var(--primary);
 }
 
 .bg-primary-light {
