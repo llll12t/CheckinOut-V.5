@@ -99,7 +99,15 @@ export default function useAdminLiffAuth(): UseAdminLiffAuthReturn {
 
             if (!response.ok) {
                 const errBody = await response.text();
-                throw new Error(`Auth failed: ${response.status} ${errBody}`);
+                console.error('[useAdminLiffAuth] API Error:', response.status, errBody);
+
+                // Parse error details if available
+                try {
+                    const errJson = JSON.parse(errBody);
+                    throw new Error(errJson.details || errJson.error || `Auth failed: ${response.status}`);
+                } catch {
+                    throw new Error(`Auth failed: ${response.status} ${errBody}`);
+                }
             }
 
             const data = await response.json();
