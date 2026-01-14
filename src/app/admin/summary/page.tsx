@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { attendanceService, employeeService, systemConfigService, type Attendance, type Employee } from "@/lib/firestore";
+import { attendanceService, employeeService, swapService, systemConfigService, type Attendance, type Employee, type SwapRequest } from "@/lib/firestore";
 import { useAdmin } from "@/components/auth/AuthProvider";
 import { Users, Calendar, Clock, CheckCircle, XCircle, AlertTriangle, Download, Search } from "lucide-react";
 import { formatMinutesToHours } from "@/lib/workTime";
@@ -49,10 +49,11 @@ export default function DailySummaryPage() {
             const endDate = new Date(date);
             endDate.setHours(23, 59, 59, 999);
 
-            const [empData, attData, configData] = await Promise.all([
+            const [empData, attData, configData, allSwaps] = await Promise.all([
                 employeeService.getAll(),
                 attendanceService.getByDateRange(startDate, endDate),
                 systemConfigService.get(),
+                swapService.getAll()
             ]);
 
             const activeEmployees = empData.filter(e => e.status === "ทำงาน");
@@ -61,6 +62,10 @@ export default function DailySummaryPage() {
 
             // Get weekly holidays from config (default to Sat, Sun if missing)
             const weeklyHolidays = configData?.weeklyHolidays || [0, 6];
+            const dateStr = format(date, "yyyy-MM-dd");
+
+            // Filter approved swaps that affect the selected date
+            const approvedSwaps = allSwaps.filter(s => s.status === "อนุมัติ");
 
             // Build summaries
             const daySummaries: DailySummary[] = activeEmployees.map(emp => {
@@ -74,14 +79,34 @@ export default function DailySummaryPage() {
                 );
 
                 const hasCheckedIn = checkInRec || lateRec;
-                const isHoliday = weeklyHolidays.includes(date.getDay());
+
+                // Check if this day is a weekly holiday
+                const isWeeklyHoliday = weeklyHolidays.includes(date.getDay());
+
+                // Check swap status for this employee on this date
+                const employeeSwaps = approvedSwaps.filter(s => s.employeeId === emp.id);
+                let effectiveHoliday = isWeeklyHoliday;
+
+                employeeSwaps.forEach(swap => {
+                    const workDate = swap.workDate instanceof Date ? swap.workDate : new Date(swap.workDate);
+                    const holidayDate = swap.holidayDate instanceof Date ? swap.holidayDate : new Date(swap.holidayDate);
+
+                    // ถ้าวันนี้เป็นวันที่ขอมาทำงาน (workDate) → ไม่ใช่วันหยุด
+                    if (format(workDate, "yyyy-MM-dd") === dateStr) {
+                        effectiveHoliday = false;
+                    }
+                    // ถ้าวันนี้เป็นวันที่ขอหยุดแทน (holidayDate) → เป็นวันหยุด
+                    if (format(holidayDate, "yyyy-MM-dd") === dateStr) {
+                        effectiveHoliday = true;
+                    }
+                });
 
                 // ดึง lateMinutes จาก record (อาจอยู่ใน checkInRec หรือ lateRec)
                 const actualLateMinutes = lateRec?.lateMinutes || checkInRec?.lateMinutes || 0;
                 const isActuallyLate = actualLateMinutes > 0;
 
                 let status: DailySummary["status"] = "ไม่มาทำงาน";
-                if (isHoliday) {
+                if (effectiveHoliday) {
                     status = "วันหยุด";
                 } else if (lateRec || isActuallyLate) {
                     status = "สาย";
