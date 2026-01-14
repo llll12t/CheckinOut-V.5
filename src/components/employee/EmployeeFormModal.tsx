@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { employeeService, type Employee } from "@/lib/firestore";
 
@@ -29,12 +29,12 @@ export function EmployeeFormModal({ isOpen, onClose, employee, onSuccess, readOn
         baseSalary: 0,
         status: "ทำงาน" as "ทำงาน" | "ลาออก" | "พ้นสภาพ",
         endDate: undefined as Date | undefined,
+        lineUserId: "",
         leaveQuota: {
             personal: 3,
             sick: 30,
             vacation: 5,
         },
-        // weeklyHolidays removed
     });
 
     // Update form when employee prop changes
@@ -52,6 +52,7 @@ export function EmployeeFormModal({ isOpen, onClose, employee, onSuccess, readOn
                 baseSalary: employee.baseSalary || 0,
                 status: employee.status || "ทำงาน",
                 endDate: employee.endDate,
+                lineUserId: employee.lineUserId || "",
                 leaveQuota: {
                     personal: employee.leaveQuota?.personal || 3,
                     sick: employee.leaveQuota?.sick || 30,
@@ -72,6 +73,7 @@ export function EmployeeFormModal({ isOpen, onClose, employee, onSuccess, readOn
                 baseSalary: 0,
                 status: "ทำงาน",
                 endDate: undefined,
+                lineUserId: "",
                 leaveQuota: {
                     personal: 6,
                     sick: 30,
@@ -113,6 +115,7 @@ export function EmployeeFormModal({ isOpen, onClose, employee, onSuccess, readOn
                 baseSalary: 0,
                 status: "ทำงาน",
                 endDate: undefined,
+                lineUserId: "",
                 leaveQuota: {
                     personal: 6,
                     sick: 30,
@@ -322,7 +325,46 @@ export function EmployeeFormModal({ isOpen, onClose, employee, onSuccess, readOn
                         </div>
                     </div>
 
-
+                    {/* LINE User ID - แสดงเฉพาะเมื่อแก้ไขพนักงานที่มีอยู่แล้ว */}
+                    {employee && (
+                        <div className="space-y-4">
+                            <h3 className="text-lg font-semibold text-gray-700">การเชื่อมต่อ LINE</h3>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    LINE User ID
+                                </label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={formData.lineUserId}
+                                        className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#EBDACA] focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500 font-mono text-sm"
+                                        placeholder="ยังไม่ได้ผูกบัญชี LINE"
+                                        readOnly
+                                    />
+                                    {formData.lineUserId && !readOnly && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData({ ...formData, lineUserId: "" })}
+                                            className="px-4 py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl transition-colors flex items-center gap-2"
+                                            title="ลบ LINE User ID"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                            <span className="hidden sm:inline">ลบ</span>
+                                        </button>
+                                    )}
+                                </div>
+                                {formData.lineUserId ? (
+                                    <p className="text-xs text-green-600 mt-1">
+                                        ✓ ผูกบัญชีแล้ว - ลบเพื่อให้พนักงานสามารถผูกบัญชีใหม่ได้
+                                    </p>
+                                ) : (
+                                    <p className="text-xs text-gray-400 mt-1">
+                                        พนักงานจะถูกผูกบัญชีอัตโนมัติเมื่อเข้าใช้งานผ่าน LINE
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Leave Quota */}
                     <div className="space-y-4">

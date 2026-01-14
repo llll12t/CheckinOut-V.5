@@ -592,17 +592,18 @@ export default function CheckInPage() {
                 if (photo && employee?.id) {
                     try {
                         // Check storage limit before saving
-                        const uploadCheck = await canUploadPhoto(photo);
-                        if (!uploadCheck.canUpload) {
-                            showAlert("พื้นที่เก็บข้อมูลเต็ม", uploadCheck.message, "error");
-                            setLoading(false);
-                            return;
-                        }
+                        // PERFORMANCE FIX: Temporarily disabled expensive storage check (fetches all docs)
+                        // const uploadCheck = await canUploadPhoto(photo);
+                        // if (!uploadCheck.canUpload) {
+                        //     showAlert("พื้นที่เก็บข้อมูลเต็ม", uploadCheck.message, "error");
+                        //     setLoading(false);
+                        //     return;
+                        // }
 
                         // Show warning if near limit
-                        if (uploadCheck.message) {
-                            console.warn(uploadCheck.message);
-                        }
+                        // if (uploadCheck.message) {
+                        //     console.warn(uploadCheck.message);
+                        // }
 
                         // Compress the photo before saving
                         photoBase64 = await compressBase64Image(photo, 640, 480, 0.6);
@@ -704,17 +705,14 @@ export default function CheckInPage() {
                 return;
             }
 
-            // Send Flex Message (Non-blocking)
-            try {
-                await sendFlexMessage(checkInType, now, location.address, locationConfig?.enabled ? distance : null);
-            } catch (flexError) {
-                console.error("Error sending Flex Message:", flexError);
-                // Don't block success if Flex Message fails
-            }
-
             setShowSuccess(true);
 
-            await checkTodayStatus();
+            // Send Flex Message (Non-blocking / Fire and forget)
+            sendFlexMessage(checkInType, now, location.address, locationConfig?.enabled ? distance : null)
+                .catch(flexError => console.error("Error sending Flex Message:", flexError));
+
+            // Refresh status in background
+            checkTodayStatus().catch(err => console.error("Error refreshing status:", err));
 
             // Delay reset to show success message
             setTimeout(() => {

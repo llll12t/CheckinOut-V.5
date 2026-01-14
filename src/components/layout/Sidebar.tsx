@@ -65,6 +65,7 @@ const menuGroups: MenuGroup[] = [
         items: [
             { icon: FileText, label: "การลา", href: "/admin/leave" },
             { icon: Clock, label: "ขอทำงานล่วงเวลา", href: "/admin/ot" },
+            { icon: ArrowLeftRight, label: "สลับวันหยุด", href: "/admin/swap" },
         ]
     },
     {

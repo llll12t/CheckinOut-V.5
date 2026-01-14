@@ -351,7 +351,31 @@ export default function PayrollPage() {
                 targetEmployees = targetEmployees.filter(e => e.department === selectedDepartment);
             }
 
-            // 3. Fetch Data & Calculate
+            // 3. Fetch ALL Data ONCE (fix N+1 query problem)
+            // Instead of querying per employee, fetch all attendance and OT in the date range
+            const [allAttendance, allOTRequests] = await Promise.all([
+                attendanceService.getByDateRange(startDate, endDate),
+                otService.getByDateRange(startDate, endDate)
+            ]);
+
+            // Group attendance and OT by employee ID for efficient lookup
+            const attendanceByEmployee = new Map<string, Attendance[]>();
+            allAttendance.forEach(a => {
+                if (!attendanceByEmployee.has(a.employeeId)) {
+                    attendanceByEmployee.set(a.employeeId, []);
+                }
+                attendanceByEmployee.get(a.employeeId)?.push(a);
+            });
+
+            const otByEmployee = new Map<string, OTRequest[]>();
+            allOTRequests.forEach(ot => {
+                if (!otByEmployee.has(ot.employeeId)) {
+                    otByEmployee.set(ot.employeeId, []);
+                }
+                otByEmployee.get(ot.employeeId)?.push(ot);
+            });
+
+            // 4. Calculate for each employee (no more individual queries!)
             const results: PayrollItem[] = [];
 
             // Use config values or defaults
@@ -370,19 +394,12 @@ export default function PayrollPage() {
                     gracePeriod: config?.lateGracePeriod ?? 0
                 };
 
-                // Fetch Attendance & OT
-                const [attendance, otRequests] = await Promise.all([
-                    attendanceService.getHistory(emp.id, startDate, endDate),
-                    otService.getByEmployeeId(emp.id)
-                ]);
+                // Get attendance and OT from pre-fetched data (no database query!)
+                const attendance = attendanceByEmployee.get(emp.id) || [];
+                const otRequests = otByEmployee.get(emp.id) || [];
 
-                // Filter OT by date and status
-                const approvedOT = otRequests.filter(ot =>
-                    ot.status === "อนุมัติ" &&
-                    ot.date &&
-                    ot.date >= startDate &&
-                    ot.date <= endDate
-                );
+                // Filter OT by status
+                const approvedOT = otRequests.filter(ot => ot.status === "อนุมัติ");
 
                 // Group Attendance by Date
                 const dailyAttendance = new Map<string, Attendance[]>();

@@ -627,6 +627,133 @@ export const swapService = {
     },
 };
 
+// Shift Change Request types (ขอเปลี่ยนกะ)
+export interface ShiftChangeRequest {
+    id?: string;
+    employeeId: string;
+    employeeName: string;
+    date: Date;                  // วันที่ต้องการเปลี่ยนกะ
+    currentShiftId?: string;     // ID กะเดิม (อ้างอิง)
+    currentShiftName?: string;   // ชื่อกะเดิม
+    targetShiftId: string;       // ID กะใหม่ที่ต้องการ
+    targetShiftName: string;     // ชื่อกะใหม่
+    reason: string;
+    status: "รออนุมัติ" | "อนุมัติ" | "ไม่อนุมัติ";
+    createdAt: Date;
+}
+
+// Shift Change Request CRUD operations (ขอเปลี่ยนกะ)
+export const shiftChangeService = {
+    async create(request: Omit<ShiftChangeRequest, "id">) {
+        const docRef = await addDoc(collection(db, "shiftChangeRequests"), {
+            ...request,
+            date: Timestamp.fromDate(request.date),
+            createdAt: Timestamp.fromDate(request.createdAt),
+        });
+        return docRef.id;
+    },
+
+    async getAll() {
+        const q = query(collection(db, "shiftChangeRequests"), orderBy("createdAt", "desc"));
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            date: doc.data().date?.toDate(),
+            createdAt: doc.data().createdAt?.toDate(),
+        })) as ShiftChangeRequest[];
+    },
+
+    async getByEmployeeId(employeeId: string) {
+        const q = query(
+            collection(db, "shiftChangeRequests"),
+            where("employeeId", "==", employeeId),
+            orderBy("createdAt", "desc")
+        );
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            date: doc.data().date?.toDate(),
+            createdAt: doc.data().createdAt?.toDate(),
+        })) as ShiftChangeRequest[];
+    },
+
+    async getByDateRange(startDate: Date, endDate: Date) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+
+        const q = query(
+            collection(db, "shiftChangeRequests"),
+            where("date", ">=", Timestamp.fromDate(start)),
+            where("date", "<=", Timestamp.fromDate(end)),
+            orderBy("date", "desc")
+        );
+
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            date: doc.data().date?.toDate(),
+            createdAt: doc.data().createdAt?.toDate(),
+        })) as ShiftChangeRequest[];
+    },
+
+    async getApprovedByEmployeeAndDate(employeeId: string, date: Date) {
+        const dayStart = new Date(date);
+        dayStart.setHours(0, 0, 0, 0);
+        const dayEnd = new Date(date);
+        dayEnd.setHours(23, 59, 59, 999);
+
+        const q = query(
+            collection(db, "shiftChangeRequests"),
+            where("employeeId", "==", employeeId),
+            where("date", ">=", Timestamp.fromDate(dayStart)),
+            where("date", "<=", Timestamp.fromDate(dayEnd)),
+            where("status", "==", "อนุมัติ")
+        );
+
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+            const docData = querySnapshot.docs[0];
+            return {
+                id: docData.id,
+                ...docData.data(),
+                date: docData.data().date?.toDate(),
+                createdAt: docData.data().createdAt?.toDate(),
+            } as ShiftChangeRequest;
+        }
+        return null;
+    },
+
+    async updateStatus(id: string, status: ShiftChangeRequest["status"]) {
+        const docRef = doc(db, "shiftChangeRequests", id);
+        await updateDoc(docRef, { status });
+    },
+
+    async update(id: string, data: Partial<Omit<ShiftChangeRequest, "id">>) {
+        const docRef = doc(db, "shiftChangeRequests", id);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const updateData: any = { ...data };
+
+        if (data.date) {
+            updateData.date = Timestamp.fromDate(data.date);
+        }
+        if (data.createdAt) {
+            updateData.createdAt = Timestamp.fromDate(data.createdAt);
+        }
+
+        Object.keys(updateData).forEach(key => updateData[key] === undefined && delete updateData[key]);
+        await updateDoc(docRef, updateData);
+    },
+
+    async delete(id: string) {
+        await deleteDoc(doc(db, "shiftChangeRequests", id));
+    },
+};
+
 // Shift CRUD operations (กะเวลาทำงาน)
 export const shiftService = {
     async create(shift: Omit<Shift, "id">) {
